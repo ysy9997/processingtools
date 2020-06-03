@@ -18,3 +18,28 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     if progress == length: print('\n' + finish_mark)
 
     return True
+
+def make_video(str: path):
+    """
+    make avi file using images in path
+    path: directory path for images
+    return True
+    """
+    import cv2
+    import glob
+    #from tqdm import tqdm
+    import tqdm
+    
+    files = glob.glob('./result/*.png')
+    files = sorted(files)
+
+
+    h, w, _ = cv2.imread(files[0]).shape
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    out = cv2.VideoWriter('output.avi', fourcc, 60, (w,h))
+
+    for i in tqdm.tqdm(files):
+        out.write(cv2.imread(i))
+     
+    out.release()
+    return True
