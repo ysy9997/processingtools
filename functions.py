@@ -20,7 +20,7 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     return True
 
 
-def make_video(str: path):
+def make_video(path: str):
     """
     make avi file using images in path
     path: directory path for images
