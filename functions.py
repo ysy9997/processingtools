@@ -31,7 +31,7 @@ def make_video(str: path):
     #from tqdm import tqdm
     import tqdm
     
-    files = glob.glob('./result/*.png')
+    files = glob.glob(path + '/*.png')
     files = sorted(files)
 
 
