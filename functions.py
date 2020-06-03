@@ -19,6 +19,7 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
 
     return True
 
+
 def make_video(str: path):
     """
     make avi file using images in path
