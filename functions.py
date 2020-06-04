@@ -45,6 +45,7 @@ def make_video(path: str):
     out.release()
     return True
 
+
 def video2png(video_path: str, save_path: str):
     """
     video to png file
