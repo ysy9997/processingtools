@@ -14,7 +14,7 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     bar = '█' * int(bar_length / 100 * progress_per)
     space = '░' * (bar_length - int(bar_length / 100 * progress_per))
 
-    print('\r%s%s    %s%%    %d/%d' % (bar, space, progress_per_str, progress, length), end='')
+    print('|\r%s%s|    %s%%    %d/%d' % (bar, space, progress_per_str, progress, length), end='')
     if progress == length: print('\n' + finish_mark)
 
     return True
@@ -44,3 +44,17 @@ def make_video(path: str):
      
     out.release()
     return True
+
+def video2png(video_path: str, save_path: str):
+    """
+    video to png file
+    save_path: video file directory, save_path: save png directory
+    return True
+    """
+    print('read: %s' % (video_path))
+    cap = cv2.VideoCapture(video_path)
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    for i in range(length):
+        progress_bar(i, length, finish_mark = 'video to png finish!')
+        frame = cap.read()[1]
+        cv2.imwrite(save_path + '_%d.png' % (i), frame)
