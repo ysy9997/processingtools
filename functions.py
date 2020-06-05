@@ -1,3 +1,6 @@
+import cv2
+import glob
+
 def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str='progress finish!'):
     """
     print progress
@@ -20,15 +23,14 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     return True
 
 
-def make_video(images_path: str, save_path: str):
+def png2video(images_path: str, save_path: str, fps: int = 60):
     """
     make avi file using images in path
     :param images_path: directory path for images
     :param save_path: directory path for video
+    :param fps: video fps (default: 60)
     :return: True
     """
-    import cv2
-    import glob
 
     # when run in window, should replace backslash
     images_path = images_path.replace('\\', '/')
@@ -42,7 +44,7 @@ def make_video(images_path: str, save_path: str):
 
     h, w, _ = cv2.imread(files[0]).shape
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter(save_path, fourcc, 60, (w, h))
+    out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
     length = len(files)
 
     for n, i in enumerate(files):
@@ -52,17 +54,21 @@ def make_video(images_path: str, save_path: str):
     out.release()
     return True
 
-
 def video2png(video_path: str, save_path: str):
     """
     video to png file
-    save_path: video file directory, save_path: save png directory
-    return True
+    :param video_path: video file directory
+    :param save_path: save png directory
+    :return: True
     """
+
+    video_path = video_path.replace('\\', '/')
+    save_path = save_path.replace('\\', '/')
+
     print('read: %s' % (video_path))
     cap = cv2.VideoCapture(video_path)
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     for i in range(length):
-        progress_bar(i, length, finish_mark = 'video to png finish!')
+        progress_bar(i, length, finish_mark=video_path + ' to png finish!')
         frame = cap.read()[1]
         cv2.imwrite(save_path + '_%d.png' % (i), frame)
