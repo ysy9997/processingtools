@@ -1,11 +1,11 @@
 def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str='progress finish!'):
     """
     print progress
-
-    progress: present progress, length: total progress, bar_length: bar length,
-    finish_mark: print string what you want when progress finish
-
-    return: True
+    :param progress: the number of present progress
+    :param length: the number of total progress
+    :param bar_length: bar length
+    :param finish_mark: print string what you want when progress finish
+    :return: return: True
     """
 
     progress = progress + 1
@@ -20,28 +20,35 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     return True
 
 
-def make_video(path: str):
+def make_video(images_path: str, save_path: str):
     """
     make avi file using images in path
-    path: directory path for images
-    return True
+    :param images_path: directory path for images
+    :param save_path: directory path for video
+    :return: True
     """
     import cv2
     import glob
-    #from tqdm import tqdm
-    import tqdm
-    
-    files = glob.glob(path + '/*.png')
+
+    # when run in window, should replace backslash
+    images_path = images_path.replace('\\', '/')
+    save_path = save_path.replace('\\', '/')
+
+    files = glob.glob(images_path + '/*.png')
     files = sorted(files)
 
+    # when run in window, glob return backslash so this have to do
+    for n, i in enumerate(files): files[n] = i.replace('\\', '/')
 
     h, w, _ = cv2.imread(files[0]).shape
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter('output.avi', fourcc, 60, (w,h))
+    out = cv2.VideoWriter(save_path, fourcc, 60, (w, h))
+    length = len(files)
 
-    for i in tqdm.tqdm(files):
+    for n, i in enumerate(files):
         out.write(cv2.imread(i))
-     
+        progress_bar(n, length, finish_mark='make finish')
+
     out.release()
     return True
 
