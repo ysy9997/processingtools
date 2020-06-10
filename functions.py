@@ -80,3 +80,24 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+        
+def video_resize(in_path: str, out_path: str, size):
+    """
+    video resize as size
+    Args:
+        in_path: input video path
+        out_path: output video path
+        size: resize (height, width)
+    Returns: True
+    """
+    cap = cv2.VideoCapture(in_path)
+    print('video: %s loaded' % (in_path))
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    out = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*'mp4v'), 60, (size[1], size[0]))
+
+    for j in range(length):
+        _, frame = cap.read()
+        out.write(cv2.resize(frame, (size[1], size[0])))
+        
+        
