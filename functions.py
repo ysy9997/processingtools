@@ -74,9 +74,9 @@ def video2png(video_path: str, save_path: str):
         cv2.imwrite(save_path + '_%d.png' % (i), frame)
         
 def str2bool(v):
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ('no', 'false', 'f', 'n', '0', 'False'):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
