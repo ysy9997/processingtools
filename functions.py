@@ -1,7 +1,7 @@
 import cv2
 import glob
 
-def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str='progress finish!'):
+ef progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str='progress finished!'):
     """
     print progress
     :param progress: the number of present progress
