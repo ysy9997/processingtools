@@ -17,7 +17,7 @@ ef progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: s
     bar = '█' * int(bar_length / 100 * progress_per)
     space = '░' * (bar_length - int(bar_length / 100 * progress_per))
 
-    print('|\r%s%s|    %s%%    %d/%d' % (bar, space, progress_per_str, progress, length), end='')
+    print('\r|%s%s|    %s%%    %d/%d' % (bar, space, progress_per_str, progress, length), end='')
     if progress == length: print('\n' + finish_mark)
 
     return True
