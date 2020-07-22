@@ -8,7 +8,7 @@ ef progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: s
     :param length: the number of total progress
     :param bar_length: bar length
     :param finish_mark: print string what you want when progress finish
-    :return: return: True
+    :return: True
     """
 
     progress = progress + 1
