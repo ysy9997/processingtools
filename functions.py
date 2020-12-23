@@ -1,14 +1,14 @@
 import cv2
 import glob
 
-ef progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str='progress finished!'):
+def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str = 'progress finished!'):
     """
     print progress
     :param progress: the number of present progress
     :param length: the number of total progress
     :param bar_length: bar length
     :param finish_mark: print string what you want when progress finish
-    :return: True
+    :return: return: True
     """
 
     progress = progress + 1
@@ -17,8 +17,8 @@ ef progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: s
     bar = '█' * int(bar_length / 100 * progress_per)
     space = '░' * (bar_length - int(bar_length / 100 * progress_per))
 
-    print('\r|%s%s|    %s%%    %d/%d' % (bar, space, progress_per_str, progress, length), end='')
-    if progress == length: print('\n' + finish_mark)
+    print(f'\r|{bar}{space}|    {progress_per_str}%%    {progress}/{length}', end='')
+    if progress == length: print(f'\n{finish_mark}')
 
     return True
 
