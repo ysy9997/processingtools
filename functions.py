@@ -17,7 +17,7 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     bar = '█' * int(bar_length / 100 * progress_per)
     space = '░' * (bar_length - int(bar_length / 100 * progress_per))
 
-    print(f'\r|{bar}{space}|    {progress_per_str}%%    {progress}/{length}', end='')
+    print(f'\r|{bar}{space}|    {progress_per_str}%    {progress}/{length}', end='')
     if progress == length: print(f'\n{finish_mark}')
 
     return True
