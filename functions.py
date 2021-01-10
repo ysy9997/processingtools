@@ -1,34 +1,60 @@
 import cv2
 import glob
 
-def progress_bar(progress: int, length: int, start_time = None, bar_length: int = 40, finish_mark: str = 'progress finished!'):
+class ProgressBar:
     """
-    print progress
-    :param progress: the number of present progress
-    :param length: the number of total progress
-    :param start_time: the start time about the for loop
-    :param bar_length: bar length
-    :param finish_mark: print string what you want when progress finish
-    :return: True
+    The class of progress.
+    This should be defined before the for loop.
     """
 
-    progress = progress + 1
-    progress_per = progress / length * 100
-    progress_per_str = str(int(progress_per * 10) / 10)
-    bar = '█' * int(bar_length / 100 * progress_per)
-    space = '░' * (bar_length - int(bar_length / 100 * progress_per))
+    def __init__(self, in_loop, bar_length: int = 40, finish_mark: str = 'progress finished!'):
+        """
+        The initial function
+        :param length: the number of total progress
+        :param bar_length: bar length
+        :param finish_mark: print string what you want when progress finish
+        """
 
-    if start_time == None: print(f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}% \033[38;5;177m{progress}/{length}\033[0m ', end='')
-    else:
-        left = (time.time() - start_time) * (length - progress)
-        if left >= 3600: left = f'{left / 3600:.1f}h'
-        elif left >= 60: left = f'{round(left / 60)}m'
-        else: left = f'{round(left)}s'
+        import time
+        self.take = time.time()
+        self.start = self.take * 1000
+        self.bar_length = bar_length
+        self.finish_mark = finish_mark
+        self.index = 0
 
-        print(f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}% \033[38;5;177m{progress}/{length}\033[38;5;43m({left})\033[0m ', end='')
-    if progress == length: print(f'\n\033[5m{finish_mark}\033[0m')
+        if type(in_loop) == int: self.in_list = [i for i in range(in_loop)]
+        else: self.in_list = in_loop
 
-    return True
+        self.length = len(self.in_list)
+
+    def __iter__(self): return self
+
+    def __next__(self):
+        import time
+
+        if self.index == self.length:
+            bar = '█' * self.bar_length
+            print(f'\r|{bar}| \033[38;5;208m100.0%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m0s\033[0m\033[0m |  ', end='')
+            print(f'\n{self.finish_mark}\033[5m({round(time.time() * 1000 - self.start)}ms)\033[0m\n')
+
+            raise StopIteration
+        else:
+            progress_per = self.index / self.length * 100
+            progress_per_str = str(int(progress_per * 10) / 10)
+            bar = '█' * int(self.bar_length / 100 * progress_per)
+            space = '░' * (self.bar_length - int(self.bar_length / 100 * progress_per))
+            if self.index == 0: left = '...'
+            else:
+                left = (time.time() - self.take) * (self.length - self.index)
+                if left >= 3600: left = f'{left / 3600:.1f}h'
+                elif left >= 60: left = f'{round(left / 60)}m'
+                else: left = f'{round(left)}s'
+            print(f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |  ', end='')
+            self.take = time.time()
+
+            out = self.in_list[self.index]
+            self.index = self.index + 1
+            return out
 
 
 def png2video(images_path: str, save_path: str, fps: int = 60):
