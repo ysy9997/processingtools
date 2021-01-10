@@ -1,14 +1,15 @@
 import cv2
 import glob
 
-def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: str = 'progress finished!'):
+def progress_bar(progress: int, length: int, start_time = None, bar_length: int = 40, finish_mark: str = 'progress finished!'):
     """
     print progress
     :param progress: the number of present progress
     :param length: the number of total progress
+    :param start_time: the start time about the for loop
     :param bar_length: bar length
     :param finish_mark: print string what you want when progress finish
-    :return: return: True
+    :return: True
     """
 
     progress = progress + 1
@@ -17,8 +18,15 @@ def progress_bar(progress: int, length: int, bar_length: int = 50, finish_mark: 
     bar = '█' * int(bar_length / 100 * progress_per)
     space = '░' * (bar_length - int(bar_length / 100 * progress_per))
 
-    print(f'\r|{bar}{space}|    {progress_per_str}%    {progress}/{length}', end='')
-    if progress == length: print(f'\n{finish_mark}')
+    if start_time == None: print(f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}% \033[38;5;177m{progress}/{length}\033[0m ', end='')
+    else:
+        left = (time.time() - start_time) * (length - progress)
+        if left >= 3600: left = f'{left / 3600:.1f}h'
+        elif left >= 60: left = f'{round(left / 60)}m'
+        else: left = f'{round(left)}s'
+
+        print(f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}% \033[38;5;177m{progress}/{length}\033[38;5;43m({left})\033[0m ', end='')
+    if progress == length: print(f'\n\033[5m{finish_mark}\033[0m')
 
     return True
 
