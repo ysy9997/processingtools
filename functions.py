@@ -5,7 +5,7 @@ class ProgressBar:
     """
     The class of progress.
     This should be defined begin for loop.
-    example: 
+    example:
         for x in ProgressBar(100)
         for x in ProgressBar(range(0, 100))
         for x in ProgressBar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -21,7 +21,7 @@ class ProgressBar:
 
         import time
         self.take = time.time()
-        self.start = self.take * 1000
+        self.start = self.take * 1000    # for the total take time
         self.bar_length = bar_length
         self.finish_mark = finish_mark
         self.index = 0
@@ -35,8 +35,13 @@ class ProgressBar:
     def __iter__(self): return self
 
     def __next__(self):
+        """
+        the iteration phase
+        :return: the consist of for loop
+        """
         import time
 
+        # when the loop finished
         if self.index == self.length:
             bar = '█' * self.bar_length
             print(f'\r|{bar}| \033[38;5;208m100.0%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m0s\033[0m\033[0m |  ', end='')
@@ -48,12 +53,16 @@ class ProgressBar:
             progress_per_str = str(int(progress_per * 10) / 10)
             bar = '█' * int(self.bar_length / 100 * progress_per)
             space = '░' * (self.bar_length - int(self.bar_length / 100 * progress_per))
-            if self.index == 0: left = '...'
+
+            if self.index == 0:
+                # The first loop is not finished yet, so that it cannot be calculated
+                left = '...'
             else:
                 left = (time.time() - self.take) * (self.length - self.index)
                 if left >= 3600: left = f'{left / 3600:.1f}h'
                 elif left >= 60: left = f'{round(left / 60)}m'
                 else: left = f'{round(left)}s'
+
             print(f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |  ', end='')
             self.take = time.time()
 
