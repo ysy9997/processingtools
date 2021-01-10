@@ -4,13 +4,17 @@ import glob
 class ProgressBar:
     """
     The class of progress.
-    This should be defined before the for loop.
+    This should be defined begin for loop.
+    example: 
+        for x in ProgressBar(100)
+        for x in ProgressBar(range(0, 100))
+        for x in ProgressBar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     """
 
     def __init__(self, in_loop, bar_length: int = 40, finish_mark: str = 'progress finished!'):
         """
         The initial function
-        :param length: the number of total progress
+        :param in_loop: the input loop
         :param bar_length: bar length
         :param finish_mark: print string what you want when progress finish
         """
@@ -23,6 +27,7 @@ class ProgressBar:
         self.index = 0
 
         if type(in_loop) == int: self.in_list = [i for i in range(in_loop)]
+        elif type(in_loop) == range: self.in_list = [i for i in in_loop]
         else: self.in_list = in_loop
 
         self.length = len(self.in_list)
