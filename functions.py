@@ -1,5 +1,11 @@
 import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
 import glob
+import multiprocessing as mp
+import argparse
+
 
 class ProgressBar:
     """
@@ -85,6 +91,125 @@ class ProgressBar:
             return out
 
 
+def video2png(video_path: str, save_path: str):
+    """
+    video to png file
+    save_path: video file directory, save_path: save png directory
+    return True if the function end as normal, else False
+    """
+
+    print(f'read: {video_path}')
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print(f'\033[31mvideo path: {video_path} is not exist\033[0m')
+        return False
+
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    nzero = int(np.log10(length)) + 1
+    zeros = f'0{nzero}d'
+    for i in ProgressBar(range(length)):
+        ret, frame = cap.read()
+        if ret: cv2.imwrite(f'{save_path}/{i:{zeros}}.png', frame)
+
+    return True
+
+
+def video_resize(in_path: str, out_path: str, size):
+    """
+    video resize as size
+    Args:
+        in_path: input video path
+        out_path: output video path
+        size: resize (height, width)
+    Returns: True
+    """
+
+    cap = cv2.VideoCapture(in_path)
+    fourcc = round(cap.get(cv2.CAP_PROP_FOURCC))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fps = round(cap.get(cv2.CAP_PROP_FPS))
+    if cap.isOpened():
+        print('video: %s loaded' % (in_path))
+    else:
+        print('\033[31mvideo: %s not loaded\033[0m' % (in_path))
+        exit(1)
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    out = cv2.VideoWriter(out_path, fourcc, fps, (size[1], size[0]))
+
+    for j in range(length):
+        _, frame = cap.read()
+        out.write(cv2.resize(frame, (size[1], size[0])))
+
+    return True
+
+
+def create_folder(directory, warning: bool = True):
+    """
+    create folder when folder is not exist
+    :param directory: the path which is verified exist
+    :param warning: print warning when folder is not exist
+    :return: True when directory is created
+    """
+
+    try:
+        if not os.path.exists(directory):
+            if warning: print(f'\033[31m{directory} is created. \033[0m')
+            os.makedirs(directory)
+            return True
+        else: return False
+    except OSError:
+        print('Error: Creating directory. ' + directory)
+
+
+def read_images(dir_path: str, img_format: str = None):
+    """
+    return the tuple that is all images name
+    :param dir_path: the images folder
+    :param img_format: images format (e.g. 'png' or 'jpg')
+    :return: the tuple that is all images name
+    """
+
+    if img_format is None:
+        images_png = glob.glob(f'{dir_path}/*.png')
+        images_jpg = glob.glob(f'{dir_path}/*.jpg')
+        return sorted(images_png + images_jpg)
+
+    else:
+        return sorted(glob.glob(f'{dir_path}/*.{img_format}'))
+
+
+def multi_func(func, args: tuple):
+    """
+    Run the function as multiprocess
+    :param func: the function for running multiprocess
+    :param args: arguments for function
+    :return: True
+    """
+
+    cpu_n = mp.cpu_count()
+    if cpu_n < len(args):
+        for i in range(len(args) // cpu_n):
+            pro = list()
+            for j in range(cpu_n):
+                pro.append(mp.Process(target=func, args=args[i * cpu_n + j]))
+            for mul in pro: mul.start()
+            for mul in pro: mul.join()
+
+        pro = list()
+        for left in range(cpu_n * i + j + 1, len(args)):
+            pro.append(mp.Process(target=func, args=args[left]))
+        for mul in pro: mul.start()
+        for mul in pro: mul.join()
+
+    else:
+        pro = list()
+        for left in range(0, len(args)):
+            pro.append(mp.Process(target=func, args=args[left]))
+        for mul in pro: mul.start()
+        for mul in pro: mul.join()
+
+    return True
+
 def png2video(images_path: str, save_path: str, fps: int = 60):
     """
     make avi file using images in path
@@ -107,34 +232,14 @@ def png2video(images_path: str, save_path: str, fps: int = 60):
     h, w, _ = cv2.imread(files[0]).shape
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
-    length = len(files)
 
-    for n, i in enumerate(files):
+    for i in ProgressBar(files):
         out.write(cv2.imread(i))
-        progress_bar(n, length, finish_mark='make finish')
 
     out.release()
     return True
 
-def video2png(video_path: str, save_path: str):
-    """
-    video to png file
-    :param video_path: video file directory
-    :param save_path: save png directory
-    :return: True
-    """
 
-    video_path = video_path.replace('\\', '/')
-    save_path = save_path.replace('\\', '/')
-
-    print('read: %s' % (video_path))
-    cap = cv2.VideoCapture(video_path)
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    for i in range(length):
-        progress_bar(i, length, finish_mark=video_path + ' to png finish!')
-        frame = cap.read()[1]
-        cv2.imwrite(save_path + '_%d.png' % (i), frame)
-        
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1', 'True'):
         return True
@@ -142,24 +247,3 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-
-        
-def video_resize(in_path: str, out_path: str, size):
-    """
-    video resize as size
-    Args:
-        in_path: input video path
-        out_path: output video path
-        size: resize (height, width)
-    Returns: True
-    """
-    cap = cv2.VideoCapture(in_path)
-    print('video: %s loaded' % (in_path))
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    out = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*'mp4v'), 60, (size[1], size[0]))
-
-    for j in range(length):
-        _, frame = cap.read()
-        out.write(cv2.resize(frame, (size[1], size[0])))
-        
-        
