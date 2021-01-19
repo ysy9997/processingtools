@@ -37,10 +37,8 @@ class ProgressBar:
 
         if type(in_loop) == int:
             self.in_list = [i for i in range(in_loop)]
-        elif type(in_loop) == range:
-            self.in_list = [i for i in in_loop]
         else:
-            self.in_list = in_loop
+            self.in_list = [i for i in in_loop]
 
         self.length = len(self.in_list)
 
