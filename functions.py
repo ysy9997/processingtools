@@ -208,6 +208,7 @@ def multi_func(func, args: tuple):
 
     return True
 
+
 def png2video(images_path: str, save_path: str, fps: int = 60):
     """
     make avi file using images in path
