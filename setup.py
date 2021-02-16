@@ -9,10 +9,10 @@ setuptools.setup(
     license='MIT',
     author="syy",
     author_email="ysy9997@gmail.com",
-    description="Various function for image process",
+    description="https://github.com/ysy9997/ProcessingTools.git",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ysy9997/functions.gitt",
+    url="https://github.com/ysy9997/ProcessingTools.git",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
