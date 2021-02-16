@@ -6,6 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="ProcessingTools",
     version="0.0.1",
+    license='MIT',
     author="syy",
     author_email="ysy9997@gmail.com",
     description="Various function for image process",
