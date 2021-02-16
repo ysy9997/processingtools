@@ -1,2 +1,2 @@
-opencv-contrib-python==3.4.10.37
-numpy==1.19.4
+opencv-contrib-python>=3.4.10.37
+numpy>=1.19.4
