@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import glob
 import multiprocessing as mp
 import argparse
+
+# for debug
+# import matplotlib.pyplot as plt
 
 
 class ProgressBar:
