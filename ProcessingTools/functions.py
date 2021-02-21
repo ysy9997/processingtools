@@ -30,9 +30,11 @@ class ProgressBar:
 
         if start_mark is not None: print(start_mark)
 
-        import time
-        self.take = time.time()
-        self.start = self.take * 1000  # for the total take time
+        self.take = np.zeros(10, float)
+        T = time.time()
+        for i in range(10): self.take[i] = T
+        
+        self.start = time.time() * 1000  # for the total take time
         self.bar_length = bar_length
         self.finish_mark = finish_mark
         self.index = 0
@@ -52,7 +54,6 @@ class ProgressBar:
         the iteration phase
         :return: the consist of for loop
         """
-        import time
 
         # when the loop finished
         if self.index == self.length:
@@ -73,18 +74,26 @@ class ProgressBar:
                 # The first loop is not finished yet, so that it cannot be calculated
                 left = '...'
             else:
-                left = (time.time() - self.take) * (self.length - self.index)
+                take_temp = np.zeros(10, float)
+                take_temp[:9] = self.take[1:10]
+                take_temp[9] = time.time()
+
+                # make time smooth
+                if self.index >= 10: left = np.mean(take_temp - self.take) * (self.length - self.index)
+                else: left = np.sum(take_temp - self.take) * (self.length - self.index) / self.index
+
+                self.take = take_temp
+
                 if left >= 3600:
                     left = f'{left / 3600:.1f}h'
                 elif left >= 60:
-                    left = f'{round(left / 60)}m'
+                    left = f'{round(left / 6) / 10:.1f}m'
                 else:
-                    left = f'{round(left)}s'
+                    left = f'{round(left * 10) / 10:.1f}s'
 
             print(
                 f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |  ',
                 end='')
-            self.take = time.time()
 
             out = self.in_list[self.index]
             self.index = self.index + 1
