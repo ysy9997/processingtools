@@ -4,6 +4,7 @@ import os
 import glob
 import multiprocessing as mp
 import argparse
+import time
 
 # for debug
 # import matplotlib.pyplot as plt
