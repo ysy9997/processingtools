@@ -8,7 +8,6 @@ import time
 
 # for debug
 # import matplotlib.pyplot as plt
-# test
 
 
 class ProgressBar:
@@ -137,8 +136,8 @@ def video_resize(in_path: str, out_path: str, size):
 
     cap = cv2.VideoCapture(in_path)
     fourcc = round(cap.get(cv2.CAP_PROP_FOURCC))
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     fps = round(cap.get(cv2.CAP_PROP_FPS))
+
     if cap.isOpened():
         print('video: %s loaded' % (in_path))
     else:
@@ -222,12 +221,13 @@ def multi_func(func, args: tuple):
     return True
 
 
-def png2video(images_path: str, save_path: str, fps: int = 60):
+def png2video(images_path: str, save_path: str, fps: int = 60, fourcc = cv2.VideoWriter_fourcc(*'DIVX')):
     """
     make avi file using images in path
     :param images_path: directory path for images
     :param save_path: directory path for video
     :param fps: video fps (default: 60)
+    :param fourcc: video fourcc (default: cv2.VideoWriter_fourcc(*'DIVX'))
     :return: True
     """
 
@@ -242,7 +242,6 @@ def png2video(images_path: str, save_path: str, fps: int = 60):
     for n, i in enumerate(files): files[n] = i.replace('\\', '/')
 
     h, w, _ = cv2.imread(files[0]).shape
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
 
     for i in ProgressBar(files):
