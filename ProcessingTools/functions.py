@@ -34,7 +34,7 @@ class ProgressBar:
         self.take = np.zeros(10, float)
         T = time.time()
         for i in range(10): self.take[i] = T
-        
+
         self.start = time.time() * 1000  # for the total take time
         self.bar_length = bar_length
         self.finish_mark = finish_mark
@@ -188,15 +188,15 @@ def read_images(dir_path: str, img_format: str = None):
         return sorted(glob.glob(f'{dir_path}/*.{img_format}'))
 
 
-def multi_func(func, args: tuple):
+def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()):
     """
     Run the function as multiprocess
     :param func: the function for running multiprocess
     :param args: arguments for function
+    :param cpu_n: the number of cpus number that you want use (default: the number of the all cpus)
     :return: True
     """
 
-    cpu_n = mp.cpu_count()
     if cpu_n < len(args):
         for i in range(len(args) // cpu_n):
             pro = list()
@@ -221,7 +221,7 @@ def multi_func(func, args: tuple):
     return True
 
 
-def png2video(images_path: str, save_path: str, fps: int = 60, fourcc = cv2.VideoWriter_fourcc(*'DIVX')):
+def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2.VideoWriter_fourcc(*'DIVX')):
     """
     make avi file using images in path
     :param images_path: directory path for images
