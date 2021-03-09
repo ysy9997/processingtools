@@ -268,5 +268,5 @@ def sorted_glob(path: str, key = None):
     :return: sorted glob list
     """
 
-    if key is None: return sorted(glob(path))
-    else: return sorted(glob(path), key=key)
+    if key is None: return sorted(glob.glob(path))
+    else: return sorted(glob.glob(path), key=key)
