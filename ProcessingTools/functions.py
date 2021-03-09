@@ -258,3 +258,15 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def sorted_glob(path: str, key = None):
+    """
+    automatically sorted glob
+    :param path: glob path
+    :param key: sorted key
+    :return: sorted glob list
+    """
+
+    if key is None: return sorted(glob(path))
+    else: return sorted(glob(path), key=key)
