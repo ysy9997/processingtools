@@ -5,9 +5,7 @@ import glob
 import multiprocessing as mp
 import argparse
 import time
-
-# for debug
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 class ProgressBar:
@@ -271,3 +269,16 @@ def sorted_glob(path: str, key = None):
 
     if key is None: return sorted(glob.glob(path))
     else: return sorted(glob.glob(path), key=key)
+
+
+def torch_img_show(img):
+
+    try: import torch
+    except ImportError:
+        print('this function is needed pytorch!')
+        raise ImportError
+
+    img = (img - torch.min(img))
+    img = img / torch.max(img) * 255
+    plt.imshow(np.array(img.permute(1, 2, 0)).astype(int))
+    plt.show()
