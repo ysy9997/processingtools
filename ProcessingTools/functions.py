@@ -6,6 +6,7 @@ import multiprocessing as mp
 import argparse
 import time
 import matplotlib.pyplot as plt
+import itertools
 
 
 class ProgressBar:
@@ -39,11 +40,13 @@ class ProgressBar:
         self.index = 0
 
         if type(in_loop) == int:
-            self.in_list = [i for i in range(in_loop)]
+            self.it = iter([i for i in range(in_loop)])
         else:
-            self.in_list = [i for i in in_loop]
+            self.it = iter(in_loop)
 
-        self.length = len(self.in_list)
+        self.it, copy_it = itertools.tee(self.it)
+        self.length = 0
+        for _ in iter(copy_it): self.length = self.length + 1
 
     def __iter__(self):
         return self
@@ -95,7 +98,7 @@ class ProgressBar:
                 f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |  ',
                 end='')
 
-            out = self.in_list[self.index]
+            out = next(self.it)
             self.index = self.index + 1
             return out
 
