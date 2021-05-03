@@ -46,6 +46,7 @@ def torch_imgs_save(imgs, save_folder_path: str = './'):
         print('\033[31mInput must be torch tensor images (Tensor shape must be (?, 3, ?, ?))\033[0m')
         return False
 
+    imgs = imgs.clone()
     imgs = torch_img_denormalize(imgs)
     zeros = int(np.log10(imgs.shape[0])) + 1
 
