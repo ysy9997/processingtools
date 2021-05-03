@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ProcessingTools",
-    version="0.0.8",
+    version="0.0.9",
     install_requires=['opencv-contrib-python>=3.4.10.37',
                       'numpy>=1.19.4',
                       'matplotlib>=3.3.3'],
