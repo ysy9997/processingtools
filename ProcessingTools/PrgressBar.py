@@ -13,7 +13,7 @@ class ProgressBar:
         for x in ProgressBar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     """
 
-    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark: str = 'progress finished!'):
+    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress finished!'):
         """
         The initial function
         :param in_loop: the input loop
@@ -76,8 +76,10 @@ class ProgressBar:
                 take_temp[9] = time.time()
 
                 # make time smooth
-                if self.index >= 10: left = np.mean(take_temp - self.take) * (self.length - self.index)
-                else: left = np.sum(take_temp - self.take) * (self.length - self.index) / self.index
+                if self.index >= 10:
+                    left = np.mean(take_temp - self.take) * (self.length - self.index)
+                else:
+                    left = np.sum(take_temp - self.take) * (self.length - self.index) / self.index
 
                 self.take = take_temp
 
