@@ -25,7 +25,7 @@ def video2png(video_path: str, save_path: str):
     zeros = f'0{nzero}d'
     for i in ProcessingTools.PrgressBar.ProgressBar(range(length)):
         ret, frame = cap.read()
-        if ret: cv2.imwrite(f'{save_path}/{i:{zeros}}.png', frame)
+        cv2.imwrite(f'{save_path}/{i:{zeros}}.png', frame) if ret else None
 
     return True
 
@@ -69,7 +69,7 @@ def create_folder(directory, warning: bool = True):
 
     try:
         if not os.path.exists(directory):
-            if warning: print(f'\033[31m{directory} is created. \033[0m')
+            print(f'\033[31m{directory} is created. \033[0m') if warning else None
             os.makedirs(directory)
             return True
         else: return False

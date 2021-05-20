@@ -22,7 +22,7 @@ class ProgressBar:
         :param finish_mark: print string what you want when progress finish
         """
 
-        if start_mark is not None: print(start_mark)
+        print(start_mark) if start_mark is not None else None
 
         self.take = np.zeros(10, float)
         T = time.time()
