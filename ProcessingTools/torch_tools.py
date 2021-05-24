@@ -52,6 +52,6 @@ def torch_imgs_save(imgs, save_folder_path: str = './'):
 
     for i in range(imgs.shape[0]):
         img = imgs[i].cpu().detach()
-        cv2.imwrite(f'{save_folder_path}/{i:0{zeros}}.png', np.array(img.permute(1, 2, 0)).astype(int)[:, :, ::-1])
+        cv2.imwrite(f'{save_folder_path}{i:0{zeros}}.png', np.array(img.permute(1, 2, 0)).astype(int)[:, :, ::-1])
 
     return True
