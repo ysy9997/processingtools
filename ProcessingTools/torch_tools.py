@@ -30,11 +30,11 @@ def torch_img_denormalize(imgs):
     return imgs
 
 
-def torch_imgs_save(imgs, save_folder_path: str = './'):
+def torch_imgs_save(imgs, save_path: str = './'):
     """
     Save images in png files
     :param imgs: torch tensor
-    :param save_folder_path: save path
+    :param save_path: save path
     :return: True if normal, otherwise False
     """
 
