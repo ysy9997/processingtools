@@ -57,7 +57,7 @@ def torch_imgs_save(imgs, save_path: str = './'):
     return True
 
 
-def fcl(in_features: int, out_features: int, mid_features: int = 1024, layers: int = 0, drop_out=0):
+def fcl(in_features: int, out_features: int, mid_features: int = 1024, layers: int = 0, drop_out=1):
     """
     Make fully connected layers.
     :param in_features: size of each input feature
@@ -83,6 +83,6 @@ def fcl(in_features: int, out_features: int, mid_features: int = 1024, layers: i
     fc.append(torch.nn.BatchNorm1d(out_features))
     fc.append(torch.nn.ReLU(inplace=True))
 
-    if drop_out > 0: fc.append(torch.nn.Dropout(drop_out))
+    if drop_out < 1: fc.append(torch.nn.Dropout(drop_out))
 
     return torch.nn.Sequential(*fc)
