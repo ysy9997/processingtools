@@ -33,10 +33,8 @@ class ProgressBar:
         self.finish_mark = finish_mark
         self.index = 0
 
-        if type(in_loop) == int:
-            self.it = iter([i for i in range(in_loop)])
-        else:
-            self.it = iter(in_loop)
+        self.it = iter([i for i in range(in_loop)]) if type(in_loop) == int else iter(in_loop)
+        del in_loop
 
         self.it, copy_it = itertools.tee(self.it)
         self.length = 0
