@@ -34,7 +34,6 @@ class ProgressBar:
         self.index = 0
 
         self.it = iter([i for i in range(in_loop)]) if type(in_loop) == int else iter(in_loop)
-        del in_loop
 
         self.it, copy_it = itertools.tee(self.it)
         self.length = 0
