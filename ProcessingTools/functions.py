@@ -176,3 +176,17 @@ def sorted_glob(path: str, key = None):
 
     if key is None: return sorted(glob.glob(path))
     else: return sorted(glob.glob(path), key=key)
+
+
+def print_write(string: str, file):
+    """
+    Write text in a text file with printing in the console.
+    :param string: string to write
+    :param file: text file
+    :return: True
+    """
+
+    print(string, file=file)
+    print(string)
+
+    return True
