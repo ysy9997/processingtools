@@ -13,13 +13,14 @@ class ProgressBar:
         for x in ProgressBar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     """
 
-    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress finished!'):
+    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress finished!', max=False):
         """
         The initial function
         :param in_loop: the input loop
         :param bar_length: bar length
         :param start_mark: print string when the progress start
         :param finish_mark: print string what you want when progress finish
+        :param max: max value. If you do not fill this, it will calculate automatically but it may has memory leak
         """
 
         print(start_mark) if start_mark is not None else None
@@ -35,9 +36,11 @@ class ProgressBar:
 
         self.it = iter([i for i in range(in_loop)]) if type(in_loop) == int else iter(in_loop)
 
-        self.it, copy_it = itertools.tee(self.it)
-        self.length = 0
-        for _ in iter(copy_it): self.length = self.length + 1
+        if max: self.length = max
+        else:
+            self.it, copy_it = itertools.tee(self.it)
+            self.length = 0
+            for _ in iter(copy_it): self.length = self.length + 1
 
     def __iter__(self):
         return self
