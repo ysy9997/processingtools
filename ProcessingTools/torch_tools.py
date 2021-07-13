@@ -41,9 +41,12 @@ def torch_imgs_save(imgs, save_path: str = './'):
     if type(imgs) != torch.Tensor:
         print('\033[31mInput must be torch tensor images (Tensor shape must be (?, 3, ?, ?))\033[0m')
         return False
+
+    imgs = torch.unsqueeze(torch.unsqueeze(imgs, dim=0), dim=0) if len(imgs.shape) == 2 else imgs
     imgs = torch.unsqueeze(imgs, dim=0) if len(imgs.shape) == 3 else imgs
-    if imgs.shape[1] != 3:
-        print('\033[31mInput must be torch tensor images (Tensor shape must be (?, 3, ?, ?))\033[0m')
+
+    if imgs.shape[1] != 3 and imgs.shape[1] != 1:
+        print('\033[31mInput must be torch tensor images (Tensor shape must be (?, 3, ?, ?) if color scale or (?, 1, ?, ?) if gray scale)\033[0m')
         return False
 
     imgs = imgs.clone()
