@@ -20,7 +20,7 @@ class ProgressBar:
         :param bar_length: bar length
         :param start_mark: print string when the progress start
         :param finish_mark: print string what you want when progress finish
-        :param max: max value. If you do not fill this, it will calculate automatically but it may has memory leak
+        :param max: max value. If you do not fill this, it will calculate automatically but it may slow
         """
 
         print(start_mark) if start_mark is not None else None
