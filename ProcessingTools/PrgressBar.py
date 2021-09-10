@@ -13,14 +13,14 @@ class ProgressBar:
         for x in ProgressBar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     """
 
-    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress finished!', max=False):
+    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!', max=False):
         """
         The initial function
         :param in_loop: the input loop
         :param bar_length: bar length
         :param start_mark: print string when the progress start
         :param finish_mark: print string what you want when progress finish
-        :param max: max value. If you do not fill this, it will calculate automatically but it may has memory leak
+        :param max: max value. If you do not fill this, it will calculate automatically but it may slow
         """
 
         print(start_mark) if start_mark is not None else None
@@ -55,7 +55,7 @@ class ProgressBar:
         if self.index == self.length:
             bar = '█' * self.bar_length
             print(
-                f'\r|{bar}| \033[38;5;208m100.0%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m0s\033[0m\033[0m |  ',
+                f'\r\033[2K|{bar}| \033[38;5;208m100.0%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m0s\033[0m\033[0m |',
                 end='')
             if self.finish_mark:
                 print(f'\n\033[5m{self.finish_mark}\033[0m({round(time.time() * 1000 - self.start)}ms)\n')
@@ -91,7 +91,7 @@ class ProgressBar:
                     left = f'{round(left * 10) / 10:.1f}s'
 
             print(
-                f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |  ',
+                f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |',
                 end='')
 
             out = next(self.it)
