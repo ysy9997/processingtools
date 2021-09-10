@@ -97,9 +97,3 @@ class ProgressBar:
             out = next(self.it)
             self.index = self.index + 1
             return out
-
-
-if __name__ == '__main__':
-
-    for i in ProgressBar(range(100)):
-        time.sleep(0.1)
