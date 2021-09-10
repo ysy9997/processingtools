@@ -55,7 +55,7 @@ class ProgressBar:
         if self.index == self.length:
             bar = '█' * self.bar_length
             print(
-                f'\r|{bar}| \033[38;5;208m100.0%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m0s\033[0m\033[0m |  ',
+                f'\r\033[2K|{bar}| \033[38;5;208m100.0%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m0s\033[0m\033[0m |',
                 end='')
             if self.finish_mark:
                 print(f'\n\033[5m{self.finish_mark}\033[0m({round(time.time() * 1000 - self.start)}ms)\n')
@@ -91,9 +91,15 @@ class ProgressBar:
                     left = f'{round(left * 10) / 10:.1f}s'
 
             print(
-                f'\r|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |  ',
+                f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m | \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |',
                 end='')
 
             out = next(self.it)
             self.index = self.index + 1
             return out
+
+
+if __name__ == '__main__':
+
+    for i in ProgressBar(range(100)):
+        time.sleep(0.1)
