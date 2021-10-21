@@ -5,6 +5,7 @@ import glob
 import multiprocessing as mp
 import argparse
 import ProcessingTools.PrgressBar
+import warnings
 
 
 def video2png(video_path: str, save_path: str):
@@ -69,7 +70,7 @@ def create_folder(directory, warning: bool = True):
 
     try:
         if not os.path.exists(directory):
-            print(f'\033[31m{directory} is created. \033[0m') if warning else None
+            warnings.warn(f'{directory} is created. ') if warning else None
             os.makedirs(directory)
             return True
         else: return False
