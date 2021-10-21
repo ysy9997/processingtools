@@ -70,7 +70,8 @@ def create_folder(directory, warning: bool = True):
 
     try:
         if not os.path.exists(directory):
-            warnings.warn(f'{directory} is created. ') if warning else None
+            warning_message = f'{directory} is created. ' ########################################## need to be updated
+            warnings.warn(warning_message) if warning else None
             os.makedirs(directory)
             return True
         else: return False
