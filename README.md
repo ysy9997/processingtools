@@ -30,7 +30,7 @@ progress finished!(5311ms)
 ```
 
 ### parameters
-**class** pt.ProgressBar(in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!', max=False))
+**class**　pt.ProgressBar(*in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!', max=False*)
 
 - **in_loop**: the input loop
 - **bar_length**: bar length
