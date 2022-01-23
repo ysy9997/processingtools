@@ -30,12 +30,10 @@ progress finished!(5311ms)
 ```
 
 ### parameters
-**in_loop**: the input loop
+**class** pt.ProgressBar(in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!', max=False))
 
-**bar_length**: bar length
-
-**start_mark**: print string when the progress start
-
-**finish_mark**: print string what you want when progress finish
-
-**max**: max value. If you do not fill this, it will calculate automatically, but it may be slow
+- **in_loop**: the input loop
+- **bar_length**: bar length
+- **start_mark**: print string when the progress start
+- **finish_mark**: print string what you want when progress finish
+- **max**: max value. If you do not fill this, it will calculate automatically, but it may be slow
