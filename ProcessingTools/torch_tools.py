@@ -9,6 +9,30 @@ except ImportError:
     raise ImportError
 
 
+class QueueTensor:
+    def __init__(self, n: int):
+        """
+        :param n: queue length
+        """
+
+        self.length = n
+        self.contents = [None for _ in range(n)]
+
+    def append(self, x):
+        """
+        :param x: input tensor
+        """
+
+        temp = self.contents[-1]
+        self.contents[1:] = self.contents[0:-1]
+        self.contents[0] = x
+
+        return temp
+
+    def __call__(self):
+        return torch.stack([_ for _ in self.contents if _ is not None])
+
+
 def torch_img_show(img):
 
     img = (img - torch.min(img))
