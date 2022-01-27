@@ -17,6 +17,7 @@ class QueueTensor:
 
         self.length = n
         self.contents = [None for _ in range(n)]
+        self.len = 0
 
     def append(self, x):
         """
@@ -26,6 +27,8 @@ class QueueTensor:
         temp = self.contents[-1]
         self.contents[1:] = self.contents[0:-1]
         self.contents[0] = x
+
+        self.len = self.len + 1 if self.len < self.length else self.len
 
         return temp
 
