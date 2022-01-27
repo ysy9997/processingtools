@@ -1,4 +1,5 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
+[![Downloads](https://pepy.tech/badge/processingtools)](https://pepy.tech/project/processingtools)
 
 # ProcessionTools
 
