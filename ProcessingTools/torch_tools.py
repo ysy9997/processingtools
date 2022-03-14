@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import torch.nn.functional
 
 try:
     import torch
@@ -116,3 +117,50 @@ def fcl(in_features: int, out_features: int, mid_features: int = 1024, layers: i
     if drop_out < 1: fc.append(torch.nn.Dropout(drop_out))
 
     return torch.nn.Sequential(*fc)
+
+
+class LabelSmoothingCrossEntropyLoss(torch.nn.Module):
+    """
+    Label Smoothing Cross Entropy Loss
+    """
+
+    def __init__(self, epsilon: float = 0.1, reduction: str = 'mean'):
+        """
+        initial function
+        :param epsilon: epsilon for smoothing
+        :param reduction: mean or sum
+        """
+
+        super().__init__()
+        self.epsilon = epsilon
+        self.reduction = reduction
+
+    @staticmethod
+    def reduce_loss(loss, reduction: str = 'mean'):
+        return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
+
+    @staticmethod
+    def linear_combination(x, y, epsilon: float):
+        """
+        linear combination with epsilon
+        :param x: input x
+        :param y: input y
+        :param epsilon: epsilon of combination
+        :return:
+        """
+
+        return epsilon * x + (1 - epsilon) * y
+
+    def forward(self, inputs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """
+        calculate label smoothing loss
+        :param inputs: predicted tensor
+        :param target: ground truth
+        :return: label smoothing loss
+        """
+
+        n = inputs.size()[-1]
+        log_input = torch.nn.functional.log_softmax(inputs, dim=-1)
+        loss = self.reduce_loss(-log_input.sum(dim=-1), self.reduction)
+        nll = torch.nn.functional.nll_loss(log_input, target, reduction=self.reduction)
+        return self.linear_combination(loss / n, nll, self.epsilon)
