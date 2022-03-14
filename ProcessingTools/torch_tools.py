@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import torch.nn.functional
 
 try:
     import torch
@@ -116,3 +117,25 @@ def fcl(in_features: int, out_features: int, mid_features: int = 1024, layers: i
     if drop_out < 1: fc.append(torch.nn.Dropout(drop_out))
 
     return torch.nn.Sequential(*fc)
+
+
+class LabelSmoothingCrossEntropy(torch.nn.Module):
+    def __init__(self, epsilon: float = 0.1, reduction='mean'):
+        super().__init__()
+        self.epsilon = epsilon
+        self.reduction = reduction
+
+    @staticmethod
+    def reduce_loss(loss, reduction='mean'):
+        return loss.mean() if reduction == 'mean' else loss.sum() if reduction == 'sum' else loss
+
+    @staticmethod
+    def linear_combination(x, y, epsilon):
+        return epsilon * x + (1 - epsilon) * y
+
+    def forward(self, preds, target):
+        n = preds.size()[-1]
+        log_preds = torch.nn.functional.log_softmax(preds, dim=-1)
+        loss = self.reduce_loss(-log_preds.sum(dim=-1), self.reduction)
+        nll = torch.nn.functional.nll_loss(log_preds, target, reduction=self.reduction)
+        return self.linear_combination(loss / n, nll, self.epsilon)
