@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import torch.nn.functional
+import copy
 
 try:
     import torch
@@ -35,6 +36,45 @@ class QueueTensor:
 
     def __call__(self):
         return torch.stack([_ for _ in self.contents if _ is not None])
+
+
+class WeightAveraging:
+    """
+    Izmailov, Pavel, et al. "Averaging weights leads to wider optima and better generalization." arXiv preprint arXiv:1803.05407 (2018).
+    """
+
+    def __init__(self):
+        """
+        initial function
+        """
+
+        self.model_list = list()
+
+    def save(self, model):
+        """
+        :param model: input model for averaging
+        """
+
+        temp_model = copy.deepcopy(model)
+        temp_model.cpu()
+        self.model_list.append(temp_model)
+
+    def averaging(self):
+        """
+        averaging saved model
+        :return: averaged model
+        """
+
+        state_dict = [_.state_dict() for _ in self.model_list]
+        averaging_sd = dict()
+
+        for key in self.model_list[0].state_dict():
+            averaging_sd[key] = torch.mean(torch.stack([_[key] for _ in state_dict], dim=0), dim=0)
+
+        temp_model = copy.deepcopy(self.model_list[0])
+        temp_model.load_state_dict(averaging_sd)
+
+        return temp_model
 
 
 def torch_img_show(img):
