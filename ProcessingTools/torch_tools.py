@@ -59,22 +59,18 @@ class WeightAveraging:
         temp_model.cpu()
         self.model_list.append(temp_model)
 
-    def averaging(self):
+    def averaging(self, model):
         """
         averaging saved model
-        :return: averaged model
         """
 
         state_dict = [_.state_dict() for _ in self.model_list]
         averaging_sd = dict()
 
         for key in self.model_list[0].state_dict():
-            averaging_sd[key] = torch.mean(torch.stack([_[key] for _ in state_dict], dim=0), dim=0)
+            averaging_sd[key] = torch.mean(torch.stack([_[key].float() for _ in state_dict], dim=0), dim=0)
 
-        temp_model = copy.deepcopy(self.model_list[0])
-        temp_model.load_state_dict(averaging_sd)
-
-        return temp_model
+        model.load_state_dict(averaging_sd)
 
 
 def torch_img_show(img):
