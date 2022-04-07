@@ -55,7 +55,7 @@ class WeightAveraging:
         :param model: input model for averaging
         """
 
-        self.weight_list.append(model.state_dict())
+        self.weight_list.append(copy.deepcopy(model.state_dict()))
 
     def averaging(self, model):
         """
