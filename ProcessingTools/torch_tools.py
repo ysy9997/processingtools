@@ -48,27 +48,24 @@ class WeightAveraging:
         initial function
         """
 
-        self.model_list = list()
+        self.weight_list = list()
 
     def save(self, model):
         """
         :param model: input model for averaging
         """
 
-        temp_model = copy.deepcopy(model)
-        temp_model.cpu()
-        self.model_list.append(temp_model)
+        self.weight_list.append(copy.deepcopy(model.state_dict()))
 
     def averaging(self, model):
         """
         averaging saved model
         """
 
-        state_dict = [_.state_dict() for _ in self.model_list]
         averaging_sd = dict()
 
-        for key in self.model_list[0].state_dict():
-            averaging_sd[key] = torch.mean(torch.stack([_[key].float() for _ in state_dict], dim=0), dim=0)
+        for key in self.weight_list[0]:
+            averaging_sd[key] = torch.mean(torch.stack([_[key].float() for _ in self.weight_list], dim=0), dim=0)
 
         model.load_state_dict(averaging_sd)
 
