@@ -80,7 +80,7 @@ def create_folder(directory, warning: bool = True):
 def read_images(dir_path: str, img_format: str = None):
     """
     return the tuple that is all images name
-    :param dir_path: the images folder
+    :param dir_path: the images' folder
     :param img_format: images format (e.g. 'png' or 'jpg')
     :return: the tuple that is all images name
     """
@@ -188,5 +188,27 @@ def print_write(string: str, file):
 
     print(string, file=file)
     print(string)
+
+    return True
+
+
+def resize_images(dir_path: str, save_path: str, size, interpolation=None, img_format: str = None):
+    """
+    return the tuple that is all images name
+    :param dir_path: the images' folder
+    :param save_path: save path
+    :param size: size for resize that you want
+    :param interpolation: interpolation parameter for opencv resize function
+    :param img_format: images format (e.g. 'png' or 'jpg')
+    :return: True
+    """
+
+    images = read_images(dir_path, img_format)
+
+    for i in images:
+        img = cv2.imread(i)
+        img = cv2.resize(img, size, interpolation=interpolation)
+        name = os.path.basename(i)
+        cv2.imwrite(f'{save_path}/{name}', img)
 
     return True
