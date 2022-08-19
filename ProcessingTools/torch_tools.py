@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 import torch.nn.functional
 import copy
+import torchvision.transforms
+import torchvision.transforms.functional
 
 try:
     import torch
@@ -197,3 +199,60 @@ class LabelSmoothingCrossEntropyLoss(torch.nn.Module):
         loss = self.reduce_loss(-log_input.sum(dim=-1), self.reduction)
         nll = torch.nn.functional.nll_loss(log_input, target, reduction=self.reduction)
         return self.linear_combination(loss / n, nll, self.epsilon)
+
+
+class ResizeKeepRatio:
+    """
+    Resize, but keep ratio
+    """
+
+    def __init__(self, size, interpolation=torchvision.transforms.functional.InterpolationMode.BICUBIC, corner: str = 'center', value=0):
+        """
+        initial function
+        :param size: size of resize
+        :param interpolation: interpolation mode
+        :param corner: how to pad. (e.g. 'center', 'TL', 'TR', 'BL', 'BR'). 'T' means Top, 'B' means Bottom, 'L' means Left, and 'R' means Right
+        :param value: padding value. you can set as string (e.g. 'zero', 'one', 'noise') or float.
+        """
+
+        self.corner = corner
+        self.value = value
+        self.size = size
+        self.interpolation = interpolation
+
+    def __call__(self, image):
+        """
+        resize image, but keep image ratio
+        :param image: input image
+        """
+
+        if type(image) != torch.Tensor:
+            image = torchvision.transforms.ToTensor()(image)
+
+        r_target = self.size[0] / self.size[1]
+        h, w = image.shape[1:]
+        r = h / w
+
+        if self.value == 'zero' or self.value == 0:
+            pad = torch.zeros((3, *self.size))
+        elif self.value == 'one' or self.value == 1:
+            pad = torch.ones((3, *self.size))
+        elif self.value == 'noise':
+            pad = torch.rand((3, *self.size))
+        else:
+            pad = torch.ones((3, *self.size)) * self.value
+
+        if r > r_target:
+            image = torchvision.transforms.Resize(size=(self.size[0], round(self.size[0] / r)), interpolation=self.interpolation)(image)
+            if self.corner[1] == 'L': pad[:, :, :round(self.size[0] / r)] = image
+            elif self.corner[1] == 'R': pad[:, :, self.size[1] - round(self.size[0] / r):] = image
+            else: pad[:, :, (self.size[1] - round(self.size[0] / r)) // 2:(self.size[1] + round(self.size[0] / r)) // 2] = image
+        elif r < r_target:
+            image = torchvision.transforms.Resize(size=(round(self.size[1] * r), self.size[1]), interpolation=self.interpolation)(image)
+            if self.corner[0] == 'T': pad[:, :round(self.size[1] * r)] = image
+            elif self.corner[0] == 'B': pad[:, self.size[0] - round(self.size[1] * r):] = image
+            else: pad[:, (self.size[0] - round(self.size[1] * r)) // 2:(self.size[0] + round(self.size[1] * r)) // 2] = image
+        else:
+            pad = torchvision.transforms.Resize(size=(self.size[0], self.size[1]), interpolation=self.interpolation)(image)
+
+        return pad
