@@ -7,12 +7,12 @@
 
 - You can install this package using pip. 
 
-```pip install ProcessingTools```
+```pip install processingtools```
 
 ## usage
 
 ```
-import ProcessingTools as pt
+import processingtools as pt
 import time
 
 for i in pt.ProgressBar(range(50)):
@@ -20,7 +20,7 @@ for i in pt.ProgressBar(range(50)):
 ```
 or
 ```
-import ProcessingTools as pt
+import processingtools as pt
 import time
 
 for i in pt.ProgressBar(range(50), bar_length=40, start_mark=None, finish_mark='progress done!', max=False):

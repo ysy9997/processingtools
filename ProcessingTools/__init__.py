@@ -1,2 +1,2 @@
-from ProcessingTools.functions import *
-from ProcessingTools.PrgressBar import *
+from processingtools.functions import *
+from processingtools.PrgressBar import *

@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ProcessingTools",
+    name="processingtools",
     version="0.2.8",
     install_requires=['opencv-python>=4.5.5.62',
                       'numpy>=1.19.4',

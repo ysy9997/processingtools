@@ -4,7 +4,7 @@ import os
 import glob
 import multiprocessing as mp
 import argparse
-import ProcessingTools.PrgressBar
+import processingtools.PrgressBar
 
 
 def video2png(video_path: str, save_path: str):
@@ -23,7 +23,7 @@ def video2png(video_path: str, save_path: str):
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     nzero = int(np.log10(length)) + 1
     zeros = f'0{nzero}d'
-    for i in ProcessingTools.PrgressBar.ProgressBar(range(length)):
+    for i in processingtools.PrgressBar.ProgressBar(range(length)):
         ret, frame = cap.read()
         cv2.imwrite(f'{save_path}/{i:{zeros}}.png', frame) if ret else None
 
@@ -150,7 +150,7 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     h, w, _ = cv2.imread(files[0]).shape
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
 
-    for i in ProcessingTools.PrgressBar.ProgressBar(files):
+    for i in processingtools.PrgressBar.ProgressBar(files):
         out.write(cv2.imread(i))
 
     out.release()
