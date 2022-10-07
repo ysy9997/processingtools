@@ -206,7 +206,7 @@ class ResizeKeepRatio:
     Resize, but keep ratio
     """
 
-    def __init__(self, size, interpolation=torchvision.transforms.functional.InterpolationMode.BICUBIC, corner: str = 'center', value=0):
+    def __init__(self, size, interpolation=None, corner: str = 'center', value=0):
         """
         initial function
         :param size: size of resize
@@ -218,7 +218,16 @@ class ResizeKeepRatio:
         self.corner = corner
         self.value = value
         self.size = size
-        self.interpolation = interpolation
+
+        if interpolation is None:
+            try:
+                # if pytorch has torchvision.transforms.functional.InterpolationMode.BICUBIC
+                self.interpolation = torchvision.transforms.functional.InterpolationMode.BICUBIC
+            except AttributeError:
+                # if pytorch doesn't have torchvision.transforms.functional.InterpolationMode.BICUBIC
+                self.interpolation = 3
+        else:
+            self.interpolation = interpolation
 
     def __call__(self, image):
         """
