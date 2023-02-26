@@ -212,3 +212,30 @@ def resize_images(dir_path: str, save_path: str, size, interpolation=None, img_f
         cv2.imwrite(f'{save_path}/{name}', img)
 
     return True
+
+
+def write_text_image(img, text, org, fontFace, fontScale, color, thickness=None, lineType=None, bottomLeftOrigin=None):
+    text_size = cv2.getTextSize(text, fontFace, fontScale, thickness)[0]
+
+    img = img.copy()
+
+    if org[0] == 'center':
+        x = (img.shape[1] - text_size[0]) // 2
+    elif org[0] == 'left':
+        x = 0
+    elif org[0] == 'right':
+        x = (img.shape[1] - text_size[0])
+    else:
+        x = org[0]
+
+    if org[1] == 'center':
+        y = (img.shape[0] - text_size[1]) // 2
+    elif org[1] == 'bottom':
+        y = (img.shape[0] - text_size[1])
+    elif org[1] == 'top':
+        y = text_size[1]
+    else:
+        y = org[1]
+
+    return cv2.putText(img, text, (x, y), fontFace, fontScale, color, thickness=thickness, lineType=lineType,
+                       bottomLeftOrigin=bottomLeftOrigin)
