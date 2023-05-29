@@ -265,3 +265,133 @@ class ResizeKeepRatio:
             pad = torchvision.transforms.Resize(size=(self.size[0], self.size[1]), interpolation=self.interpolation)(image)
 
         return pad
+
+
+class SecondOrderDerivative(torch.nn.Module):
+    def __int__(self, model, meta_model, train_loss, valid_loss, optimizer, optimizer_meta, epoch, epsilon=1e-2, grad_clip_factor=5):
+        """
+        Class for second order derivative.
+        :param model: model
+        :param meta_model: meta-model
+        :param train_loss: train loss function
+        :param valid_loss: validation loss function
+        :param optimizer: main optimizer
+        :param optimizer_meta: meta-optimizer
+        :param epoch: epoch
+        :param epsilon: epsilon for meta gradient
+        :param grad_clip_factor: gradient clipping factor
+        """
+
+        super().__init__()
+        self.model = model
+        self.meta_model = meta_model
+        self.train_loss = train_loss
+        self.valid_loss = valid_loss
+        self.optimizer = optimizer
+        self.optimizer_meta = optimizer_meta
+        self.epoch = epoch
+        self.epsilon = 1e-2
+        self.grad_clip_factor = grad_clip_factor
+
+    def forward(self, inputs, inputs_valid):
+        """
+        use second derivative
+        :param inputs: inputs
+        :param inputs_valid:  for validation
+        """
+
+        with torch.no_grad():
+            ori_p = [copy.deepcopy(p) for p in self.model.parameters()]
+
+        # 1. Update for meta-model
+        # update model temporally
+        grad_nh = self.grad_train(inputs)
+        self.optimizer_train.zero_grad()
+        with torch.no_grad():
+            for w, g in zip(self.model.parameters(), grad_nh):
+                w.grad = g
+        self.optimizer_train.step()
+
+        epsilon, grad_val = self.obtain_epsilon(inputs_valid)
+
+        # get w+ gradient
+        with torch.no_grad():
+            for w, g in zip(self.model.parameters(), grad_val):
+                if g is not None:
+                    w.copy_(w + epsilon * g)
+
+        grad_hue1 = self.grad_train(inputs)
+
+        # get w- gradient
+        with torch.no_grad():
+            for w, g in zip(self.model.parameters(), grad_val):
+                if g is not None:
+                    w.copy_(w - (epsilon * g * 2))
+
+        grad_hue2 = self.grad_train(inputs)
+
+        # update meta model
+        self.optimizer_meta.zero_grad()
+        with torch.no_grad():
+            for w, g1, g2 in zip(self.meta_model.parameters(), grad_hue1, grad_hue2):
+                w.grad = -self.cf['lr'] * (g1 - g2) / (2 * epsilon)
+        torch.nn.utils.clip_grad_norm_(self.meta_model.parameters(), self.grad_clip_factor)
+        self.optimizer_meta.step()
+
+        # 2. Update for main model
+        # get gradient
+        grad, loss = self.grad_train(inputs, param=ori_p)
+
+        # update main model
+        self.optimizer.zero_grad()
+        with torch.no_grad():
+            for w, g in zip(self.model.parameters(), grad):
+                w.grad = g
+        self.optimizer.step()
+
+        return loss
+
+    def grad_val(self, valid_inputs):
+        """
+        validation gradient
+        :param valid_inputs: valid inputs (* use validation inputs *)
+        """
+
+        outputs = self.model(valid_inputs.clone().detach())
+        valid_loss = self.valid_loss(outputs)
+
+        return torch.autograd.grad(valid_loss, self.model.parameters())
+
+    def grad_train(self, inputs, param=None):
+        """
+        validation gradient
+        :param inputs: inputs (* do not use validation inputs *)
+        :param param: origin model parameters
+        """
+
+        if param is not None:
+            with torch.no_grad():
+                for w, p in zip(self.model.parameters(), param):
+                    w.copy_(p)
+
+        outputs = self.model(inputs)
+        loss = self.train_loss(outputs) * self.meta_model.weight
+
+        if param is not None:
+            return torch.autograd.grad(loss, self.model.parameters()), loss
+        else:
+            return torch.autograd.grad(loss, self.meta_model.parameters()), loss
+
+    def obtain_epsilon(self, valid_inputs):
+        """
+        calculate epsilon value
+        :param valid_inputs: valid inputs (* use validation inputs *)
+        """
+
+        grad_val = self.grad_val(valid_inputs)
+
+        flatt_grad = list()
+        for x in grad_val:
+            if x is not None:
+                flatt_grad.append(torch.reshape(x, (-1,)))
+        return self.epsilon / torch.norm(torch.cat(flatt_grad)), grad_val
