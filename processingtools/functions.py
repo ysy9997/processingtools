@@ -105,10 +105,10 @@ def read_images(dir_path: str, img_format: str = None):
     if img_format is None:
         images_png = glob.glob(f'{dir_path}/*.png')
         images_jpg = glob.glob(f'{dir_path}/*.jpg')
-        return [cv2.imread(x) for x in sorted(images_png + images_jpg)]
+        return [cv2.imread(_) for _ in sorted(images_png + images_jpg)]
 
     else:
-        return [cv2.imread(x) for x in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
+        return [cv2.imread(_) for _ in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
 
 
 def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()):
