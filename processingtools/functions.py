@@ -77,7 +77,7 @@ def create_folder(directory, warning: bool = True):
         print('Error: Creating directory. ' + directory)
 
 
-def read_images(dir_path: str, img_format: str = None):
+def read_images_list(dir_path: str, img_format: str = None):
     """
     return the tuple that is all images name
     :param dir_path: the images' folder
@@ -92,6 +92,23 @@ def read_images(dir_path: str, img_format: str = None):
 
     else:
         return sorted(glob.glob(f'{dir_path}/*.{img_format}'))
+
+
+def read_images(dir_path: str, img_format: str = None):
+    """
+    return the tuple that is all images name
+    :param dir_path: the images' folder
+    :param img_format: images format (e.g. 'png' or 'jpg')
+    :return: the tuple that is all images name
+    """
+
+    if img_format is None:
+        images_png = glob.glob(f'{dir_path}/*.png')
+        images_jpg = glob.glob(f'{dir_path}/*.jpg')
+        return [cv2.imread(x) for x in sorted(images_png + images_jpg)]
+
+    else:
+        return [cv2.imread(x) for x in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
 
 
 def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()):
@@ -203,7 +220,7 @@ def resize_images(dir_path: str, save_path: str, size, interpolation=None, img_f
     :return: True
     """
 
-    images = read_images(dir_path, img_format)
+    images = read_images_list(dir_path, img_format)
 
     for i in images:
         img = cv2.imread(i)
