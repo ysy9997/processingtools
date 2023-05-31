@@ -72,7 +72,91 @@ class WeightAveraging:
         model.load_state_dict(averaging_sd)
 
 
+class GradCam:
+    """
+    Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization
+    (https://arxiv.org/abs/1610.02391)
+    """
+
+    def __init__(self, model):
+        """
+        :param model: input model
+        """
+        self.feature_blobs = list()
+        self.backward_feature = list()
+        self.model = model
+
+    def free_list(self):
+        """
+        empty member lists
+        """
+        self.feature_blobs = list()
+        self.backward_feature = list()
+
+    def hook_feature(self, module, _input, output):
+        self.feature_blobs.append(output.cpu().data.numpy())
+
+    def backward_hook(self, module, _input, output):
+        self.backward_feature.append(output[0])
+
+    def grad_cam(self, image, ground_truth, module_name: str) -> torch.Tensor:
+        """
+        :param image: input image (torch.tensor)
+        :param ground_truth: ground_truth class
+        :param module_name: where you want to see grad-cam
+        :return: grad cam
+        """
+
+        self.model._modules.get(module_name).register_forward_hook(self.hook_feature)
+        self.model._modules.get(module_name).register_full_backward_hook(self.backward_hook)
+
+        self.model.eval()
+        feature = self.model(image)
+
+        torch.argmax(feature, dim=1)
+
+        score = feature[:, ground_truth].squeeze()
+        score.backward(retain_graph=True)
+
+        activations = torch.Tensor(self.feature_blobs[0]).to(image.device)
+        gradients = self.backward_feature[0]
+        b, k = gradients.shape[:2]
+
+        alpha = torch.mean(torch.reshape(gradients, (b, k, -1)), dim=2)
+        weights = torch.reshape(alpha, (b, k, 1, 1))
+
+        grad_cam_map = torch.sum(weights * activations, dim=1, keepdim=True)
+        grad_cam_map = torch.nn.functional.relu(grad_cam_map)
+        grad_cam_map = torch.nn.functional.interpolate(grad_cam_map, size=image.shape[2:], mode='bilinear', align_corners=False)
+        map_min, map_max = grad_cam_map.min(), grad_cam_map.max()
+        grad_cam_map = ((grad_cam_map - map_min) / (map_max - map_min)).data
+
+        return grad_cam_map
+
+    def draw_cam(self, image, ground_truth, module_name: str, save_path: str, name: str, free_list: bool = True) -> bool:
+        """
+        :param image: input image (torch.tensor)
+        :param ground_truth: ground_truth class
+        :param module_name: where you want to see grad-cam
+        :param save_path: path for saving grad cam image
+        :param name: image name
+        :param free_list: free feature_blobs and backward_feature
+        :return: grad cam image
+        """
+
+        grad_cam = self.grad_cam(image, ground_truth, module_name)
+        cv2.imwrite(f'{save_path}/cam_{name}.png', (image[:, :, ::-1] / 2 + grad_cam / 2))
+
+        if free_list:
+            self.free_list()
+
+        return True
+
+
 def torch_img_show(img):
+    """
+    :param img: torch tensor image
+    """
 
     img = (img - torch.min(img))
     img = img / torch.max(img) * 255
