@@ -5,6 +5,7 @@ import glob
 import multiprocessing as mp
 import argparse
 import processingtools.PrgressBar
+import time
 
 
 def video2png(video_path: str, save_path: str):
@@ -256,3 +257,19 @@ def write_text_image(img, text, org, fontFace, fontScale, color, thickness=None,
 
     return cv2.putText(img, text, (x, y), fontFace, fontScale, color, thickness=thickness, lineType=lineType,
                        bottomLeftOrigin=bottomLeftOrigin)
+
+
+def timer(input_function):
+    """
+    count time for input function
+    :param input_function: input function
+    return input function output
+    """
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        output = input_function(*args, **kwargs)
+        print(f'\033[95m[{input_function.__name__}]\033[0m elapsed \033[97m{time.time() - start:0.2f}\033[0m sec.')
+
+        return output
+
+    return wrapper
