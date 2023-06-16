@@ -14,7 +14,8 @@ class ProgressBar:
         for x in ProgressBar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     """
 
-    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!', max = None, total: int = None, detail_func: callable = None):
+    def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!',
+                 max: int = None, total: int = None, detail_func: callable = None):
         """
         The initial function
         :param in_loop: the input loop
