@@ -52,11 +52,11 @@ class ProgressBar:
     def __iter__(self):
         return self
 
-    def print_info(self, bar, space, progress_per_str, left, out):
-        if self.detail_func:
+    def print_info(self, bar, space, progress_per_str, left, out, end=False):
+        if self.detail_func and not end:
             print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
                   f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |'
-                  f' {self.detail_func(out)}', end='')
+                  f' {self.detail_func(out)} |', end='')
         else:
             print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
                   f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |', end='')
@@ -70,7 +70,7 @@ class ProgressBar:
         # when the loop finished
         if self.index == self.length:
             bar = '█' * self.bar_length
-            self.print_info(bar, '', '100.0', '0s', '')
+            self.print_info(bar, '', '100.0', '0s', None, end=True)
 
             if self.finish_mark:
                 print(f'\n\033[5m{self.finish_mark}\033[0m({round(time.time() * 1000 - self.start)}ms)\n')
