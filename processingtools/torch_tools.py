@@ -9,8 +9,7 @@ import torchvision.transforms.functional
 try:
     import torch
 except ImportError:
-    print('this module is needed pytorch!')
-    raise ImportError
+    raise ImportError('torch_tools is needed pytorch!')
 
 
 class QueueTensor:
