@@ -10,7 +10,7 @@ class EnvReco:
     """
     The class of Environments recorder.
     """
-    def __init__(self, save_path: str, project_root_path: str = None, space: str = '\n', varify_exist: bool = True):
+    def __init__(self, save_path: str, project_root_path: str = None, space: str = '', varify_exist: bool = True):
         """
         The initial function
         :param save_path: save path for logs
@@ -36,6 +36,7 @@ class EnvReco:
         self.os = None
 
         print(f'Record in the \"{self.save_path}\".')
+        self.logs.close()
 
     def record_code(self, folder_name: str = 'snapshot') -> True:
         """
@@ -44,11 +45,12 @@ class EnvReco:
         :return: True
         """
 
-        if self.project_root_path in self.save_path:
-            raise OSError('[record_code] will save the current folder. '
-                          'Thus, the save path must not include the current path.')
+        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
+            if self.project_root_path in self.save_path:
+                raise OSError('[record_code] will save the current folder. '
+                              'Thus, the save path must not include the current path.')
 
-        shutil.copytree(f'{self.project_root_path}', f'{self.save_path}/{folder_name}/')
+            shutil.copytree(f'{self.project_root_path}', f'{self.save_path}/{folder_name}/')
 
         return True
 
@@ -61,66 +63,64 @@ class EnvReco:
         :return: True
         """
 
-        args = self.arg2abs(args)
+        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
+            args = self.arg2abs(args)
 
-        self.put_space(print_console)
-        self.print_if_true('Args: ', print_console)
+            if save_type not in ['txt', 'text', 'json']:
+                raise ValueError('save_type must be \'txt\' or \'text\' or \'json\'')
 
-        if save_type not in ['txt', 'text', 'json']:
-            raise ValueError('save_type must be \'txt\' or \'text\' or \'json\'')
+            if save_type == 'json':
+                with open(f'{self.save_path}/args.json', 'w') as f:
+                    json.dump(args.__dict__, f, indent=4)
+            else:
+                self.put_space(print_console)
+                self.print_if_true('Args: ', print_console)
+                args_dict = args.__dict__
+                print('{', file=self.logs)
+                for key in args_dict:
+                    print(f'    {key}: {args_dict[key]}', file=self.logs)
+                print('}', file=self.logs)
 
-        if save_type == 'json':
-            with open(f'{self.save_path}/args.json', 'w') as f:
-                json.dump(args.__dict__, f, indent=4)
-        else:
-            args_dict = args.__dict__
-            print('{', file=self.logs)
-            for key in args_dict:
-                print(f'    {key}: {args_dict[key]}', file=self.logs)
-            print('}', file=self.logs)
+            if print_console:
+                args_dict = args.__dict__
+                print('{')
+                for key in args_dict:
+                    print(f'    {key}: {args_dict[key]}')
+                print('}')
 
-        if print_console:
-            args_dict = args.__dict__
-            print('{')
-            for key in args_dict:
-                print(f'    {key}: {args_dict[key]}')
-            print('}')
-
-        self.args = args.__dict__
+            self.args = args.__dict__
 
         return self.args, args
 
     def record_os(self, keys: list = None, print_console: bool = True):
+        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
+            self.put_space(print_console)
+            self.print_if_true('OS Env: ', print_console)
 
-        self.put_space(print_console)
-        self.print_if_true('OS Env: ', print_console)
+            os_env = os.environ
+            self.log_dict(os_env, keys, print_console)
 
-        os_env = os.environ
-        if keys:
-            self.print_if_true('{', print_console)
-            for key in keys:
-                self.print_if_true(f'    {key}: {os_env[key]}', print_console)
-            self.print_if_true('}', print_console)
-
-        self.os = os_env
+            self.os = os_env
 
         return self.os
 
-    def record_gpu(self, print_console: bool = True):
-        self.put_space(print_console)
-        self.print_if_true('GPU Info: ', print_console)
+    def record_gpu(self, keys: list = None, print_console: bool = True):
+        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
+            self.put_space(print_console)
+            self.print_if_true('GPU Info: ', print_console)
 
-        try:
-            import torch
+            try:
+                import torch
 
-            gpu = {'cuda': torch.cuda.is_available(),
-                   'num': torch.cuda.device_count(),
-                   'names': [torch.cuda.get_device_name(_) for _ in range(torch.cuda.device_count())]}
+                gpu = {'cuda': torch.cuda.is_available(),
+                       'num': torch.cuda.device_count(),
+                       'names': [torch.cuda.get_device_name(_) for _ in range(torch.cuda.device_count())]}
 
-        except Exception:
-            raise ImportError('this function is needed pytorch!')
+            except Exception:
+                raise ImportError('this function is needed pytorch!')
 
-        self.gpu = gpu
+            self.log_dict(gpu, keys, print_console)
+            self.gpu = gpu
         return self.gpu
 
     def record_present(self, log: str) -> True:
@@ -130,15 +130,18 @@ class EnvReco:
         return True
         """
 
-        now = self.present.now()
-        functions.print_write(f'\033[95m[{now.year}-{now.month}-{now.date} '
-                              f'{now.hour}:{now.minute}:{now.second}.{now.microsecond:0.2f}]\033[0m: {log}', self.logs)
+        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
+            now = self.present.now()
+            print(f'\033[95m[{now.year}-{now.month}-{now.day} '
+                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
+            print(f'[{now.year}-{now.month}-{now.day} '
+                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
 
         return True
 
     def put_space(self, print_console: bool = True) -> bool:
         if self.__start:
-            self.__start = True
+            self.__start = False
             return False
 
         else:
@@ -152,14 +155,6 @@ class EnvReco:
         else:
             print(contents, file=self.logs)
 
-    def logging(self, contents: str, space: bool = False, print_console: bool = True):
-        if space:
-            self.put_space()
-
-        self.print_if_true(contents, print_console)
-
-        return True
-
     @staticmethod
     def arg2abs(args):
         for attr in dir(args):
@@ -169,7 +164,10 @@ class EnvReco:
 
         return args
 
+    def log_dict(self, input_dict, keys: list = None, print_console: bool = True):
+        keys = input_dict.keys() if keys is None else keys
+        self.print_if_true('{', print_console)
 
-if __name__ == '__main__':
-    env = EnvReco('./save')
-    env.record_code()
+        for key in keys:
+            self.print_if_true(f'    {key}: {input_dict[key]}', print_console)
+        self.print_if_true('}', print_console)
