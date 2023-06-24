@@ -12,9 +12,11 @@ class EnvReco:
     """
     def __init__(self, save_path: str, project_root_path: str = None, space: str = '', varify_exist: bool = True):
         """
-        The initial function
+
         :param save_path: save path for logs
         :param project_root_path: project root path
+        :param space: space between logs
+        :param varify_exist: if False ignore save pate already exist or not
         """
 
         self.save_path = os.path.abspath(save_path)
@@ -56,11 +58,11 @@ class EnvReco:
 
     def record_arg(self, args, save_type: str = 'txt', print_console: bool = True):
         """
-
+        record input arguments
         :param args: input arguments
-        :param print_console:
-        :param save_type:
-        :return: True
+        :param print_console: if True you can see logs in the console as well
+        :param save_type: if 'json', it will be attached the logs file
+        :return: args dictionary and absolute path arg
         """
 
         with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
@@ -93,6 +95,13 @@ class EnvReco:
         return self.args, args
 
     def record_os(self, keys: list = None, print_console: bool = True):
+        """
+        record os environments
+        :param keys: if you insert key values, it will record only key environments
+        :param print_console: if True you can see logs in the console as well
+        :return: os dictionary
+        """
+
         with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
             self.put_space(print_console)
             self.print_if_true('OS Env: ', print_console)
@@ -104,7 +113,14 @@ class EnvReco:
 
         return self.os
 
-    def record_gpu(self, keys: list = None, print_console: bool = True):
+    def record_gpu(self, keys: list = None, print_console: bool = True) -> dict:
+        """
+        record gpu environments
+        :param keys: if you insert key values, it will record only key environments
+        :param print_console: if True you can see logs in the console as well
+        :return: gpu dictionary
+        """
+
         with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
             self.put_space(print_console)
             self.print_if_true('GPU Info: ', print_console)
@@ -140,6 +156,12 @@ class EnvReco:
         return True
 
     def put_space(self, print_console: bool = True) -> bool:
+        """
+        insert space in the logs
+        :param print_console: if True you can see logs in the console as well
+        :return: True or False
+        """
+
         if self.__start:
             self.__start = False
             return False
@@ -149,7 +171,14 @@ class EnvReco:
 
         return True
 
-    def print_if_true(self, contents: str, print_console: bool):
+    def print_if_true(self, contents: str, print_console: bool) -> None:
+        """
+        if print_console true, print in the console as well
+        :param contents: logs contents
+        :param print_console: if True you can see logs in the console as well
+        :return: None
+        """
+
         if print_console:
             functions.print_write(contents, self.logs)
         else:
@@ -157,6 +186,12 @@ class EnvReco:
 
     @staticmethod
     def arg2abs(args):
+        """
+        if args have path, convert absolute path
+        :param args: input arguments
+        :return: converted args
+        """
+
         for attr in dir(args):
             value = getattr(args, attr)
             if type(value) == str and os.path.exists(value):
@@ -164,10 +199,20 @@ class EnvReco:
 
         return args
 
-    def log_dict(self, input_dict, keys: list = None, print_console: bool = True):
+    def log_dict(self, input_dict, keys: list = None, print_console: bool = True) -> True:
+        """
+        write dictionary in the logs file
+        :param input_dict: input dictionary
+        :param keys: key for dictionary
+        :param print_console: if True you can see logs in the console as well
+        :return: True
+        """
+
         keys = input_dict.keys() if keys is None else keys
         self.print_if_true('{', print_console)
 
         for key in keys:
             self.print_if_true(f'    {key}: {input_dict[key]}', print_console)
         self.print_if_true('}', print_console)
+
+        return True
