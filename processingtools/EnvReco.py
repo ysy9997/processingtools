@@ -3,7 +3,24 @@ import shutil
 import json
 import time
 import datetime
-import functions
+import processingtools.functions
+
+
+def file_opener(input_function):
+    """
+    file opener
+    :param input_function: input function
+    return input function output
+    """
+    def wrapper(self, *args, **kwargs):
+        if self.logs.closed:
+            with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
+                output = input_function(self, *args, **kwargs)
+        else:
+            output = input_function(self, *args, **kwargs)
+        return output
+
+    return wrapper
 
 
 class EnvReco:
@@ -24,7 +41,7 @@ class EnvReco:
         if varify_exist and os.path.exists(self.save_path):
             raise OSError(f'{self.save_path} already exist.')
         if not os.path.exists(self.save_path):
-            functions.create_folder(self.save_path, warning=False)
+            processingtools.functions.create_folder(self.save_path, warning=False)
 
         self.logs = open(f'{save_path}/logs.txt', 'a')
         self.project_root_path = os.path.dirname(os.path.abspath(__file__)) if project_root_path is None else project_root_path
@@ -56,6 +73,7 @@ class EnvReco:
 
         return True
 
+    @file_opener
     def record_arg(self, args, save_type: str = 'txt', print_console: bool = True):
         """
         record input arguments
@@ -65,35 +83,35 @@ class EnvReco:
         :return: args dictionary and absolute path arg
         """
 
-        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
-            args = self.arg2abs(args)
+        args = self.arg2abs(args)
 
-            if save_type not in ['txt', 'text', 'json']:
-                raise ValueError('save_type must be \'txt\' or \'text\' or \'json\'')
+        if save_type not in ['txt', 'text', 'json']:
+            raise ValueError('save_type must be \'txt\' or \'text\' or \'json\'')
 
-            if save_type == 'json':
-                with open(f'{self.save_path}/args.json', 'w') as f:
-                    json.dump(args.__dict__, f, indent=4)
-            else:
-                self.put_space(print_console)
-                self.print_if_true('Args: ', print_console)
-                args_dict = args.__dict__
-                print('{', file=self.logs)
-                for key in args_dict:
-                    print(f'    {key}: {args_dict[key]}', file=self.logs)
-                print('}', file=self.logs)
+        if save_type == 'json':
+            with open(f'{self.save_path}/args.json', 'w') as f:
+                json.dump(args.__dict__, f, indent=4)
+        else:
+            self.put_space(print_console)
+            self.print_if_true('Args: ', print_console)
+            args_dict = args.__dict__
+            print('{', file=self.logs)
+            for key in args_dict:
+                print(f'    {key}: {args_dict[key]}', file=self.logs)
+            print('}', file=self.logs)
 
-            if print_console:
-                args_dict = args.__dict__
-                print('{')
-                for key in args_dict:
-                    print(f'    {key}: {args_dict[key]}')
-                print('}')
+        if print_console:
+            args_dict = args.__dict__
+            print('{')
+            for key in args_dict:
+                print(f'    {key}: {args_dict[key]}')
+            print('}')
 
-            self.args = args.__dict__
+        self.args = args.__dict__
 
         return self.args, args
 
+    @file_opener
     def record_os(self, keys: list = None, print_console: bool = True):
         """
         record os environments
@@ -102,17 +120,17 @@ class EnvReco:
         :return: os dictionary
         """
 
-        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
-            self.put_space(print_console)
-            self.print_if_true('OS Env: ', print_console)
+        self.put_space(print_console)
+        self.print_if_true('OS Env: ', print_console)
 
-            os_env = os.environ
-            self.log_dict(os_env, keys, print_console)
+        os_env = os.environ
+        self.log_dict(os_env, keys, print_console)
 
-            self.os = os_env
+        self.os = os_env
 
         return self.os
 
+    @file_opener
     def record_gpu(self, keys: list = None, print_console: bool = True) -> dict:
         """
         record gpu environments
@@ -121,46 +139,50 @@ class EnvReco:
         :return: gpu dictionary
         """
 
-        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
-            self.put_space(print_console)
-            self.print_if_true('GPU Info: ', print_console)
+        self.put_space(print_console)
+        self.print_if_true('GPU Info: ', print_console)
 
-            try:
-                import torch
+        try:
+            import torch
 
-                gpu = {'cuda': torch.cuda.is_available(),
-                       'num': torch.cuda.device_count(),
-                       'names': [torch.cuda.get_device_name(_) for _ in range(torch.cuda.device_count())]}
+            gpu = {'cuda': torch.cuda.is_available(),
+                   'num': torch.cuda.device_count(),
+                   'names': [torch.cuda.get_device_name(_) for _ in range(torch.cuda.device_count())]}
 
-            except Exception:
-                raise ImportError('this function is needed pytorch!')
+        except Exception:
+            raise ImportError('this function is needed pytorch!')
 
-            self.log_dict(gpu, keys, print_console)
-            self.gpu = gpu
+        self.log_dict(gpu, keys, print_console)
+        self.gpu = gpu
+
         return self.gpu
 
-    def record_present(self, log: str) -> True:
+    @file_opener
+    def print(self, log: str) -> True:
         """
         write and print log with present time
         :param log: log
         return True
         """
 
-        with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
-            now = self.present.now()
-            print(f'\033[95m[{now.year}-{now.month}-{now.day} '
-                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
-            print(f'[{now.year}-{now.month}-{now.day} '
-                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
+        now = self.present.now()
+        print(f'\033[95m[{now.year}-{now.month}-{now.day} '
+              f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
+        print(f'[{now.year}-{now.month}-{now.day} '
+              f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
 
         return True
 
+    @file_opener
     def put_space(self, print_console: bool = True) -> bool:
         """
         insert space in the logs
         :param print_console: if True you can see logs in the console as well
         :return: True or False
         """
+
+        if self.logs.closed:
+            self.logs = open(f'{self.save_path}/logs.txt', 'a')
 
         if self.__start:
             self.__start = False
@@ -171,6 +193,7 @@ class EnvReco:
 
         return True
 
+    @file_opener
     def print_if_true(self, contents: str, print_console: bool) -> None:
         """
         if print_console true, print in the console as well
@@ -180,7 +203,7 @@ class EnvReco:
         """
 
         if print_console:
-            functions.print_write(contents, self.logs)
+            processingtools.functions.print_write(contents, self.logs)
         else:
             print(contents, file=self.logs)
 
