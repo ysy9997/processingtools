@@ -23,7 +23,7 @@ or
 import processingtools as pt
 import time
 
-for i in pt.ProgressBar(range(50), bar_length=40, start_mark=None, finish_mark='progress done!', max=False):
+for i in pt.ProgressBar(range(50), bar_length=40, start_mark=None, finish_mark='progress done!', total=False):
     time.sleep(0.1)
 ```
 Then, 
