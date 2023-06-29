@@ -158,20 +158,22 @@ class EnvReco:
         return self.gpu
 
     @file_opener
-    def print(self, log: str) -> True:
+    def print(self, log: str, console: bool = True, file: bool = True) -> None:
         """
         write and print log with present time
         :param log: log
+        :param console: if True, print in the console
+        :param file: if True, write in the logs file
         return True
         """
 
         now = self.present.now()
-        print(f'\033[95m[{now.year}-{now.month}-{now.day} '
-              f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
-        print(f'[{now.year}-{now.month}-{now.day} '
-              f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
-
-        return True
+        if console:
+            print(f'\033[95m[{now.year}-{now.month}-{now.day} '
+                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
+        if file:
+            print(f'[{now.year}-{now.month}-{now.day} '
+                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
 
     @file_opener
     def put_space(self, print_console: bool = True) -> bool:
