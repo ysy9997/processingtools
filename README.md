@@ -43,6 +43,7 @@ progress finished!(5311ms)
 - **finish_mark**: print string what you want when progress finish
 - **total**: total value. If you do not fill this, it will calculate automatically, but it may be slow
 - **detail_func**: write detail using detail_func
+- **remove_last**: If True, remove last progressbar
 
 
 ## EnvRecoder
@@ -57,13 +58,37 @@ args = parser.parse_args()
 
 recoder = pt.EnvReco('/save/path')
 
-args = arg2abs(args)
-recoder.record_arg()
+args = recoder.arg2abs(args)
+recoder.record_arg(args)
 recoder.record_code()
 recoder.record_os()
 recoder.record_gpu()
+recoder.put_space()
 recoder.print('record logs')
 ```
 
-Then
-...
+Then, record information in the log file
+```commandline
+Args: 
+{
+    save_path: None
+}
+
+OS Env: 
+{
+    ALLUSERSPROFILE: ...
+    APPDATA: ...
+    COMMONPROGRAMFILES: ...
+    ⋮
+}
+
+GPU Info: 
+{
+    cuda: True
+    num: 1
+    names: ['...']
+}
+
+[2023-7-3 19:50:9.78]: record logs
+
+```
