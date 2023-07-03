@@ -169,7 +169,7 @@ class EnvReco:
 
         now = self.present.now()
         if console:
-            print(f'\033[95m[{now.year}-{now.month}-{now.day} '
+            print(f'\033[32m[{now.year}-{now.month}-{now.day} '
                   f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
         if file:
             print(f'[{now.year}-{now.month}-{now.day} '
