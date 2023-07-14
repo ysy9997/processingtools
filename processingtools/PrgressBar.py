@@ -15,7 +15,7 @@ class ProgressBar:
     """
 
     def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!',
-                 max: int = None, total: int = None, detail_func: callable = None, remove_last: bool = False):
+                 max: int = None, total: int = None, detail_func: callable = None, remove_last: bool = False, smoothing: int = None):
         """
         The initial function
         :param in_loop: the input loop
@@ -25,13 +25,10 @@ class ProgressBar:
         :param total: total value. If you do not fill this, it will calculate automatically, but it may be slow
         :param detail_func: write detail using detail_func
         :param remove_last: if True, remove progressbar when process is end
+        :param smoothing: make stable when estimate time taking
         """
 
         print(start_mark) if start_mark is not None else None
-
-        self.take = np.zeros(10, float)
-        T = time.time()
-        for i in range(10): self.take[i] = T
 
         self.start = time.time() * 1000  # for the total take time
         self.bar_length = bar_length
@@ -50,6 +47,11 @@ class ProgressBar:
             self.it, copy_it = itertools.tee(self.it)
             self.length = 0
             for _ in iter(copy_it): self.length = self.length + 1
+
+        self.smoothing = self.length // 100 if smoothing is None else smoothing
+        self.take = np.zeros(self.smoothing, float)
+        T = time.time()
+        for i in range(self.smoothing): self.take[i] = T
 
     def __iter__(self):
         return self
@@ -90,12 +92,12 @@ class ProgressBar:
                 # The first loop is not finished yet, so that it cannot be calculated
                 left = '...'
             else:
-                take_temp = np.zeros(10, float)
-                take_temp[:9] = self.take[1:10]
-                take_temp[9] = time.time()
+                take_temp = np.zeros(self.smoothing, float)
+                take_temp[:self.smoothing - 1] = self.take[1:self.smoothing]
+                take_temp[self.smoothing - 1] = time.time()
 
                 # make time smooth
-                if self.index >= 10:
+                if self.index >= self.smoothing:
                     left = np.mean(take_temp - self.take) * (self.length - self.index)
                 else:
                     left = np.sum(take_temp - self.take) * (self.length - self.index) / self.index
