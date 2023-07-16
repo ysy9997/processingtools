@@ -169,11 +169,11 @@ class EnvReco:
 
         now = self.present.now()
         if console:
-            print(f'\033[32m[{now.year}-{now.month}-{now.day} '
-                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
+            print(f'\033[32m[{now.year}-{now.month:02d}-{now.day:02d} '
+                  f'{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
         if file:
-            print(f'[{now.year}-{now.month}-{now.day} '
-                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
+            print(f'[{now.year}-{now.month:02d}-{now.day:02d} '
+                  f'{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
 
     @file_opener
     def put_space(self, print_console: bool = True) -> bool:
