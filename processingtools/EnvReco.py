@@ -47,7 +47,6 @@ class EnvReco:
         self.project_root_path = os.path.dirname(os.path.abspath(__file__)) if project_root_path is None else project_root_path
         self.timer = time.time()
         self.present = datetime.datetime
-        self.__start = True
         self.space = space
 
         self.args = None
@@ -92,13 +91,13 @@ class EnvReco:
             with open(f'{self.save_path}/args.json', 'w') as f:
                 json.dump(args.__dict__, f, indent=4)
         else:
-            self.put_space(print_console)
             self.print_if_true('Args: ', print_console)
             args_dict = args.__dict__
             print('{', file=self.logs)
             for key in args_dict:
                 print(f'    {key}: {args_dict[key]}', file=self.logs)
             print('}', file=self.logs)
+            self.put_space(print_console)
 
         if print_console:
             args_dict = args.__dict__
@@ -106,6 +105,7 @@ class EnvReco:
             for key in args_dict:
                 print(f'    {key}: {args_dict[key]}')
             print('}')
+            self.put_space(print_console)
 
         self.args = args.__dict__
 
@@ -120,13 +120,13 @@ class EnvReco:
         :return: os dictionary
         """
 
-        self.put_space(print_console)
         self.print_if_true('OS Env: ', print_console)
 
         os_env = os.environ
         self.log_dict(os_env, keys, print_console)
 
         self.os = os_env
+        self.put_space(print_console)
 
         return self.os
 
@@ -139,7 +139,6 @@ class EnvReco:
         :return: gpu dictionary
         """
 
-        self.put_space(print_console)
         self.print_if_true('GPU Info: ', print_console)
 
         try:
@@ -154,26 +153,29 @@ class EnvReco:
 
         self.log_dict(gpu, keys, print_console)
         self.gpu = gpu
+        self.put_space(print_console)
 
         return self.gpu
 
     @file_opener
-    def print(self, log: str, console: bool = True, file: bool = True) -> None:
+    def print(self, log: str, console: bool = True, file: bool = True, time: bool = True) -> None:
         """
         write and print log with present time
         :param log: log
         :param console: if True, print in the console
         :param file: if True, write in the logs file
+        :param time: if True, write in the present time before the log
         return True
         """
 
         now = self.present.now()
+        time_info = f'[{now.year}-{now.month:02d}-{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}.' \
+                    f'{round(now.microsecond / 10000):02d}]: ' if time else ''
+
         if console:
-            print(f'\033[32m[{now.year}-{now.month}-{now.day} '
-                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
+            print(f'\033[32m{time_info}\033[0m{log}')
         if file:
-            print(f'[{now.year}-{now.month}-{now.day} '
-                  f'{now.hour}:{now.minute}:{now.second}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
+            print(f'{time_info}{log}', file=self.logs)
 
     @file_opener
     def put_space(self, print_console: bool = True) -> bool:
@@ -186,12 +188,7 @@ class EnvReco:
         if self.logs.closed:
             self.logs = open(f'{self.save_path}/logs.txt', 'a')
 
-        if self.__start:
-            self.__start = False
-            return False
-
-        else:
-            self.print_if_true(self.space, print_console)
+        self.print_if_true(self.space, print_console)
 
         return True
 
@@ -239,5 +236,28 @@ class EnvReco:
         for key in keys:
             self.print_if_true(f'    {key}: {input_dict[key]}', print_console)
         self.print_if_true('}', print_console)
+
+        return True
+
+    def record_default(self, comment: bool = True, os_key: list = None, gpu: bool = True, args=None) -> True:
+        """
+        write basic environment
+        :param comment: True if you want to write comment
+        :param os_key: insert key for recording os
+        :param gpu: if True, record gpu information
+        :param args: write args information if feed args
+        :return:
+        """
+
+        if comment:
+            self.print(f'Comments: {input("Leave comments for the logs file: ")}', console=False, time=False)
+            self.put_space()
+        if os_key is not None:
+            self.record_os(os_key)
+        if gpu:
+            self.record_gpu()
+        if args:
+            args = self.arg2abs(args)
+            self.record_arg(args)
 
         return True
