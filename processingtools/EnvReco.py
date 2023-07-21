@@ -158,22 +158,24 @@ class EnvReco:
         return self.gpu
 
     @file_opener
-    def print(self, log: str, console: bool = True, file: bool = True) -> None:
+    def print(self, log: str, console: bool = True, file: bool = True, time: bool = True) -> None:
         """
         write and print log with present time
         :param log: log
         :param console: if True, print in the console
         :param file: if True, write in the logs file
+        :param time: if True, write in the present time before the log
         return True
         """
 
         now = self.present.now()
+        time_info = f'[{now.year}-{now.month:02d}-{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}.' \
+                    f'{round(now.microsecond / 10000):02d}]: ' if time else ''
+
         if console:
-            print(f'\033[32m[{now.year}-{now.month:02d}-{now.day:02d} '
-                  f'{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{round(now.microsecond / 10000):02d}]\033[0m: {log}')
+            print(f'\033[32m{time_info}\033[0m{log}')
         if file:
-            print(f'[{now.year}-{now.month:02d}-{now.day:02d} '
-                  f'{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{round(now.microsecond / 10000):02d}]: {log}', file=self.logs)
+            print(f'{time_info}{log}', file=self.logs)
 
     @file_opener
     def put_space(self, print_console: bool = True) -> bool:
@@ -238,8 +240,18 @@ class EnvReco:
         return True
 
     def record_default(self, comment: bool = True, os_key: list = None, gpu: bool = True, args=None) -> True:
+        """
+        write basic environment
+        :param comment: True if you want to write comment
+        :param os_key: insert key for recording os
+        :param gpu: if True, record gpu information
+        :param args: write args information if feed args
+        :return:
+        """
+
         if comment:
-            self.print(input('Comments for the logs file: '), console=False)
+            self.print(f'Comments: {input("Leave comments for the logs file: ")}', console=False, time=False)
+            self.put_space()
         if os_key is not None:
             self.record_os(os_key)
         if gpu:
