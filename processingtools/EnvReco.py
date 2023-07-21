@@ -236,3 +236,16 @@ class EnvReco:
         self.print_if_true('}', print_console)
 
         return True
+
+    def record_default(self, comment: bool = True, os_key: list = None, gpu: bool = True, args=None) -> True:
+        if comment:
+            self.print(input('Comments for the logs file: '), console=False)
+        if os_key is not None:
+            self.record_os(os_key)
+        if gpu:
+            self.record_gpu()
+        if args:
+            args = self.arg2abs(args)
+            self.record_arg(args)
+
+        return True
