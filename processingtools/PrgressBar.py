@@ -49,6 +49,8 @@ class ProgressBar:
             for _ in iter(copy_it): self.length = self.length + 1
 
         self.smoothing = self.length // 100 if smoothing is None else smoothing
+        self.smoothing = 10 if self.smoothing < 10 else self.smoothing
+
         self.take = np.zeros(self.smoothing, float)
         T = time.time()
         for i in range(self.smoothing): self.take[i] = T
