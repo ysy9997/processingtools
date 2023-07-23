@@ -53,7 +53,7 @@ class Trainer(torch.nn.Module):
                 loss_sum = loss_sum + float(loss)
 
             print('\r', end='')
-            print_recoder(self.recoder, f'[{epoch + 1} / {self.epoch}] loss: {loss_sum / len(self.train_loader): 0.3f}')
+            print_recoder(self.recoder, f'[{epoch + 1}/{self.epoch}] loss: {loss_sum / len(self.train_loader): 0.3f}')
 
             if self.scheduler is not None:
                 self.scheduler.step()
@@ -103,7 +103,7 @@ class Evaluator(torch.nn.Module):
             correct = correct + int(torch.sum(torch.argmax(outputs, dim=1) == targets))
 
         print('\r', end='')
-        print_recoder(self.recoder, f'accuracy: {(correct / data_size) * 100: 0.3f} %')
+        print_recoder(self.recoder, f'accuracy: {(correct / data_size) * 100: 0.2f} %')
 
         return correct
 
