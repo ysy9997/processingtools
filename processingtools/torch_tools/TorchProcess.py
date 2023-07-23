@@ -10,10 +10,10 @@ class Trainer(torch.nn.Module):
 
     def __init__(self, model, train_loader, test_loader, optimizer, criterion, epoch, save_path,
                 recoder=None, validation_loader=None, scheduler=None, save_interval: int = 5, valid_interval: int = 5,
-                start_epoch: int = 0):
+                start_epoch: int = 0, best_acc: int = 0, compile=True):
         super().__init__()
 
-        self.model = model
+        self.model = torch.compile(model) if compile else model
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.validation_loader = validation_loader if validation_loader is not None else test_loader
@@ -26,9 +26,10 @@ class Trainer(torch.nn.Module):
         self.save_interval = save_interval
         self.valid_interval = valid_interval
         self.start_epoch = start_epoch
+        self.best_acc = best_acc
         self.recoder = recoder
 
-        self.valid_evaluator = Evaluator(model, validation_loader, save_path, recoder)
+        self.valid_evaluator = Evaluator(model, self.validation_loader, save_path, recoder)
         self.test_evaluator = Evaluator(model, test_loader, save_path, recoder)
 
     def forward(self):
@@ -58,17 +59,17 @@ class Trainer(torch.nn.Module):
                 self.scheduler.step()
 
             if (epoch + 1) % self.save_interval == 0:
-                torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.sate_dict(), 'scheduler': self.scheduler.sate_dict()},
+                torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict(), 'best_acc': best_acc},
                            f'{self.save_path}/model_{processingtools.functions.zero_padding(self.epoch, epoch + 1)}.pth.tar')
 
             if (epoch + 1) % self.valid_interval == 0:
                 present_acc = self.valid_evaluator()
                 if best_acc < present_acc:
                     best_acc = present_acc
-                    torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.sate_dict(), 'scheduler': self.scheduler.sate_dict()},
+                    torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict(), 'best_acc': best_acc},
                                f'{self.save_path}/model_best.pth.tar')
+                self.recoder.put_space() if self.recoder is not None else print()
 
-        self.recoder.put_space() if self.recoder is not None else print()
         self.test_evaluator()
 
         return self.model
@@ -99,12 +100,12 @@ class Evaluator(torch.nn.Module):
             data_size = data_size + targets.shape[0]
 
             outputs = self.model(inputs)
-            correct = correct + int(torch.sum(torch.argmax(outputs, dim=0) == targets))
+            correct = correct + int(torch.sum(torch.argmax(outputs, dim=1) == targets))
 
-        print('\r')
-        print_recoder(self.recoder, f'accuracy: {correct / data_size: 0.3f} %')
+        print('\r', end='')
+        print_recoder(self.recoder, f'accuracy: {(correct / data_size) * 100: 0.3f} %')
 
-        self.model.train()
+        return correct
 
 
 def print_recoder(recoder, string: str):
