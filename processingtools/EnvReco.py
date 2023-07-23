@@ -12,6 +12,7 @@ def file_opener(input_function):
     :param input_function: input function
     return input function output
     """
+
     def wrapper(self, *args, **kwargs):
         if self.logs.closed:
             with open(f'{self.save_path}/logs.txt', 'a') as self.logs:
@@ -93,18 +94,10 @@ class EnvReco:
         else:
             self.print_if_true('Args: ', print_console)
             args_dict = args.__dict__
-            print('{', file=self.logs)
+            self.print_if_true('{', print_console)
             for key in args_dict:
-                print(f'    {key}: {args_dict[key]}', file=self.logs)
-            print('}', file=self.logs)
-            self.put_space(print_console)
-
-        if print_console:
-            args_dict = args.__dict__
-            print('{')
-            for key in args_dict:
-                print(f'    {key}: {args_dict[key]}')
-            print('}')
+                self.print_if_true(f'    {key}: {args_dict[key]}', print_console)
+            self.print_if_true('}', print_console)
             self.put_space(print_console)
 
         self.args = args.__dict__
