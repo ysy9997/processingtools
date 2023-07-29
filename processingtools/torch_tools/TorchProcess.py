@@ -57,18 +57,34 @@ class Trainer(torch.nn.Module):
 
             if self.scheduler is not None:
                 self.scheduler.step()
-
-            if (epoch + 1) % self.save_interval == 0:
-                torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict(), 'best_acc': best_acc},
-                           f'{self.save_path}/model_{processingtools.functions.zero_padding(self.epoch, epoch + 1)}.pth.tar')
-
-            if (epoch + 1) % self.valid_interval == 0:
-                present_acc = self.valid_evaluator()
-                if best_acc < present_acc:
-                    best_acc = present_acc
+                if (epoch + 1) % self.save_interval == 0:
                     torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict(), 'best_acc': best_acc},
-                               f'{self.save_path}/model_best.pth.tar')
-                self.recoder.put_space() if self.recoder is not None else print()
+                               f'{self.save_path}/model_{processingtools.functions.zero_padding(self.epoch, epoch + 1)}.pth.tar')
+
+                if (epoch + 1) % self.valid_interval == 0:
+                    present_acc = self.valid_evaluator()
+                    if best_acc < present_acc:
+                        best_acc = present_acc
+                        torch.save(
+                            {'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(),
+                             'scheduler': self.scheduler.state_dict(), 'best_acc': best_acc},
+                            f'{self.save_path}/model_best.pth.tar')
+                    self.recoder.put_space() if self.recoder is not None else print()
+
+            else:
+                if (epoch + 1) % self.save_interval == 0:
+                    torch.save({'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'best_acc': best_acc},
+                               f'{self.save_path}/model_{processingtools.functions.zero_padding(self.epoch, epoch + 1)}.pth.tar')
+
+                if (epoch + 1) % self.valid_interval == 0:
+                    present_acc = self.valid_evaluator()
+                    if best_acc < present_acc:
+                        best_acc = present_acc
+                        torch.save(
+                            {'epoch': epoch, 'model': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(),
+                             'best_acc': best_acc},
+                            f'{self.save_path}/model_best.pth.tar')
+                    self.recoder.put_space() if self.recoder is not None else print()
 
         self.test_evaluator()
 
