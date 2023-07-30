@@ -124,6 +124,31 @@ class Evaluator(torch.nn.Module):
         return correct
 
 
+class BundleLoss(torch.nn.Module):
+    """
+    Bundle input criterions
+    """
+
+    def __init__(self, criterions: list, reduction: str = 'Sum'):
+        super().__init__()
+        self.criterions = criterions
+        self.reduction = reduction
+
+    def forward(self, predictions, targets):
+        loss = None
+        if self.reduction == 'Sum':
+            loss = 0
+            for criterion in self.criterions:
+                loss = loss + criterion(predictions, targets)
+
+        elif self.reduction == 'None':
+            loss = list()
+            for criterion in self.criterions:
+                loss.append(criterion(predictions, targets))
+
+        return loss
+
+
 def print_recoder(recoder, string: str):
     recoder.print(string) if recoder is not None else print(string)
 
