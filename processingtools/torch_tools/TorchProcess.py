@@ -121,6 +121,7 @@ class Evaluator(torch.nn.Module):
         print('\r', end='')
         print_recoder(self.recoder, f'accuracy: {(correct / data_size) * 100: 0.2f} %')
 
+        self.model.train()
         return correct
 
 
