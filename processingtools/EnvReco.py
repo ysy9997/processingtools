@@ -163,7 +163,7 @@ class EnvReco:
 
         now = self.present.now()
         time_info = f'[{now.year}-{now.month:02d}-{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}.' \
-                    f'{round(now.microsecond / 10000):02d}]: ' if time else ''
+                    f'{now.microsecond // 10000:02d}]: ' if time else ''
 
         if console:
             print(f'\033[32m{time_info}\033[0m{log}')
