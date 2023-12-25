@@ -12,7 +12,7 @@ class VideoTools:
     def __init__(self, video_path: str):
         self.video_path = video_path
 
-        print(f'read: {video_path}')
+        print(f'Input Video: {os.path.abspath(video_path)}')
         self.cap = cv2.VideoCapture(video_path)
 
         if not self.cap.isOpened():
@@ -25,19 +25,41 @@ class VideoTools:
         self.height = round(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.video_name = os.path.basename(video_path)[:-4]
 
-    def video2images(self, save_path: str, extension: str = 'jpg', jump: int = 1):
+    def video2images(self, save_path: str, extension: str = 'jpg', start: int = 0, end: int = None, jump: int = 1, option: str = 'frame', size=None):
         """
         video to image files
         :param save_path: video file directory, save_path: save png directory
         :param extension: file extension
-        :param jump: jump frame parameter
+        :param start: start frame
+        :param end: end frame
+        :param jump: jump frame
+        :param option: 'second' or 'frame'
+        :param size: if size type is tuple resize (height, width), else if size type float, resize size times
         :return: True
         """
 
-        for n, i in processingtools.PrgressBar.ProgressBar(enumerate(range(self.length)), total=self.length):
+        if end is None:
+            end = self.length
+
+        if option == 'second' or option == 's':
+            start, end, jump = self.second2frame(start, end, jump)
+
+        if type(size) is float or type(size) is int:
+            size = [round(self.height * size), round(self.width * size)]
+
+        create_folder(save_path)
+
+        for n, i in processingtools.PrgressBar.ProgressBar(enumerate(range(self.length)), total=self.length, finish_mark=None):
             ret, frame = self.cap.read()
-            cv2.imwrite(f'{save_path}/{self.video_name}_{zero_padding(self.length, i)}.{extension}', frame) \
-                if (ret and n % jump == 0) else None
+            if start <= n and ret and n % jump == 0:
+                frame = frame if size is None else cv2.resize(frame, (size[1], size[0]))
+                cv2.imwrite(f'{save_path}/{self.video_name}_{zero_padding(self.length, i)}.{extension}', frame)
+
+            if n > end:
+                print('\r', end='\r')
+                break
+
+        print('\rImage writing done.')
 
         return True
 
@@ -45,17 +67,40 @@ class VideoTools:
         """
         video resize as size
         :param save_path: save_path path
-        :param size: resize (height, width)
+        :param size: if size type is tuple resize (height, width), else if size type float, resize size times
         :return: True
         """
 
+        if type(size) is float or type(size) is int:
+            size = [round(self.height * size), round(self.width * size)]
         out = cv2.VideoWriter(save_path, self.fourcc, self.fps, (size[1], size[0]))
 
-        for _ in processingtools.PrgressBar.ProgressBar(range(self.length), total=self.length):
+        for _ in processingtools.PrgressBar.ProgressBar(range(self.length), total=self.length, finish_mark=None):
             _, frame = self.cap.read()
             out.write(cv2.resize(frame, (size[1], size[0])))
 
+        print('\rVideo resize done.')
+
         return True
+
+    def second2frame(self, *args):
+        outputs = list()
+
+        for arg in args:
+            outputs.append(arg * self.fps)
+
+        return outputs
+
+    def video2gif(self, save_path: str, speed: float = 1, size=1):
+        try:
+            import moviepy.editor
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError('video2gif is needed moviepy! Try <pip install moviepy>.')
+
+        if type(size) is tuple or type(size) is list:
+            size = size[::-1]
+
+        moviepy.editor.VideoFileClip(self.video_path).resize(size).speedx(speed).write_gif(save_path)
 
 
 def create_folder(directory, warning: bool = True):

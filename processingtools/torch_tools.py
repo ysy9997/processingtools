@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-import torch.nn.functional
 import copy
-import torchvision.transforms
-import torchvision.transforms.functional
 
 try:
     import torch
-except ImportError:
-    raise ImportError('torch_tools is needed pytorch!')
+    import torchvision.transforms
+    import torchvision.transforms.functional
+    import torch.nn.functional
+except ModuleNotFoundError:
+    raise ModuleNotFoundError('torch_tools is needed pytorch!')
 
 
 class QueueTensor:
