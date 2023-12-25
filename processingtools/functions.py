@@ -8,56 +8,54 @@ import processingtools.PrgressBar
 import time
 
 
-def video2png(video_path: str, save_path: str):
-    """
-    video to png file
-    save_path: video file directory, save_path: save png directory
-    return True if the function end as normal, else False
-    """
+class VideoTools:
+    def __init__(self, video_path: str):
+        self.video_path = video_path
 
-    print(f'read: {video_path}')
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        print(f'\033[31mvideo path: {video_path} is not exist\033[0m')
-        return False
+        print(f'read: {video_path}')
+        self.cap = cv2.VideoCapture(video_path)
 
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    nzero = int(np.log10(length)) + 1
-    zeros = f'0{nzero}d'
-    for i in processingtools.PrgressBar.ProgressBar(range(length)):
-        ret, frame = cap.read()
-        cv2.imwrite(f'{save_path}/{i:{zeros}}.png', frame) if ret else None
+        if not self.cap.isOpened():
+            raise FileNotFoundError(f'Video path: {os.path.abspath(video_path)} is not exist or cannot be read.')
 
-    return True
+        self.length = round(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.fourcc = round(self.cap.get(cv2.CAP_PROP_FOURCC))
+        self.fps = round(self.cap.get(cv2.CAP_PROP_FPS))
+        self.width = round(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = round(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.video_name = os.path.basename(video_path)[:-4]
 
+    def video2images(self, save_path: str, extension: str = 'jpg', jump: int = 1):
+        """
+        video to image files
+        :param save_path: video file directory, save_path: save png directory
+        :param extension: file extension
+        :param jump: jump frame parameter
+        :return: True
+        """
 
-def video_resize(in_path: str, out_path: str, size):
-    """
-    video resize as size
-    Args:
-        in_path: input video path
-        out_path: output video path
-        size: resize (height, width)
-    Returns: True
-    """
+        for n, i in processingtools.PrgressBar.ProgressBar(enumerate(range(self.length)), total=self.length):
+            ret, frame = self.cap.read()
+            cv2.imwrite(f'{save_path}/{self.video_name}_{zero_padding(self.length, i)}.{extension}', frame) \
+                if (ret and n % jump == 0) else None
 
-    cap = cv2.VideoCapture(in_path)
-    fourcc = round(cap.get(cv2.CAP_PROP_FOURCC))
-    fps = round(cap.get(cv2.CAP_PROP_FPS))
+        return True
 
-    if cap.isOpened():
-        print('video: %s loaded' % (in_path))
-    else:
-        print('\033[31mvideo: %s not loaded\033[0m' % (in_path))
-        exit(1)
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    out = cv2.VideoWriter(out_path, fourcc, fps, (size[1], size[0]))
+    def video_resize(self, save_path: str, size):
+        """
+        video resize as size
+        :param save_path: save_path path
+        :param size: resize (height, width)
+        :return: True
+        """
 
-    for j in range(length):
-        _, frame = cap.read()
-        out.write(cv2.resize(frame, (size[1], size[0])))
+        out = cv2.VideoWriter(save_path, self.fourcc, self.fps, (size[1], size[0]))
 
-    return True
+        for _ in processingtools.PrgressBar.ProgressBar(range(self.length), total=self.length):
+            _, frame = self.cap.read()
+            out.write(cv2.resize(frame, (size[1], size[0])))
+
+        return True
 
 
 def create_folder(directory, warning: bool = True):
@@ -273,3 +271,10 @@ def timer(input_function):
         return output
 
     return wrapper
+
+
+def zero_padding(max_num, present_num):
+    n_zero = int(np.log10(max_num)) + 1
+    zeros = f'0{n_zero}d'
+
+    return f'{present_num:{zeros}}'
