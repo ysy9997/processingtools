@@ -15,7 +15,7 @@ class ProgressBar:
     """
 
     def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!',
-                 max: int = None, total: int = None, detail_func: callable = None, remove_last: bool = False, smoothing: int = None):
+                 max: int = None, total: int = None, detail_func: callable = None, smoothing: int = None):
         """
         The initial function
         :param in_loop: the input loop
@@ -24,7 +24,6 @@ class ProgressBar:
         :param finish_mark: print string what you want when progress finish
         :param total: total value. If you do not fill this, it will calculate automatically, but it may be slow
         :param detail_func: write detail using detail_func
-        :param remove_last: if True, remove progressbar when process is end
         :param smoothing: make stable when estimate time taking
         """
 
@@ -35,7 +34,6 @@ class ProgressBar:
         self.finish_mark = finish_mark
         self.index = 0
         self.detail_func = detail_func
-        self.remove_last = remove_last
 
         self.it = iter([i for i in range(in_loop)]) if type(in_loop) == int else iter(in_loop)
 
@@ -63,7 +61,7 @@ class ProgressBar:
             print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
                   f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |'
                   f' {self.detail_func(out)} |', end='')
-        elif end and self.remove_last:
+        elif end:
             print('\r', end='\r')
         else:
             print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
