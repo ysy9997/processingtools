@@ -22,11 +22,9 @@ def video2png(video_path: str, save_path: str):
         return False
 
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    nzero = int(np.log10(length)) + 1
-    zeros = f'0{nzero}d'
     for i in processingtools.PrgressBar.ProgressBar(range(length)):
         ret, frame = cap.read()
-        cv2.imwrite(f'{save_path}/{i:{zeros}}.png', frame) if ret else None
+        cv2.imwrite(f'{save_path}/{zero_padding(length, i)}.png', frame) if ret else None
 
     return True
 
@@ -273,3 +271,10 @@ def timer(input_function):
         return output
 
     return wrapper
+
+
+def zero_padding(max_num, present_num):
+    n_zero = int(np.log10(max_num)) + 1
+    zeros = f'0{n_zero}d'
+
+    return f'{present_num:{zeros}}'
