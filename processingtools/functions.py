@@ -25,7 +25,7 @@ class VideoTools:
         self.height = round(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.video_name = os.path.basename(video_path)[:-4]
 
-    def video2images(self, save_path: str, extension: str = 'jpg', start: int = 0, end: int = None, jump: int = 1, option: str = 'frame', size=None):
+    def video2images(self, save_path: str, extension: str = 'jpg', start: float = 0, end: float = None, jump: float = 1, option: str = 'frame', size=None):
         """
         video to image files
         :param save_path: video file directory, save_path: save png directory
