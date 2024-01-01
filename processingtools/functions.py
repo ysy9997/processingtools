@@ -198,6 +198,12 @@ class MultiProcess:
         return True
 
     def split_list(self, *args):
+        """
+        split list by the number of self.cpu_n
+        :param args: input lists
+        :return: split list
+        """
+
         outputs = list()
         quotient, remainder = divmod(len(args[0]), self.cpu_n)
 
@@ -238,6 +244,7 @@ class MultiProcess:
         :param order: if you need to order it will be True.
         :return: dill function
         """
+
         try:
             import dill
         except ModuleNotFoundError:
