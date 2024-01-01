@@ -10,20 +10,33 @@ import time
 
 class VideoTools:
     def __init__(self, video_path: str):
+        print(f'Input Video: {os.path.abspath(video_path)}')
+
         self.video_path = video_path
 
-        print(f'Input Video: {os.path.abspath(video_path)}')
-        self.cap = cv2.VideoCapture(video_path)
+        if not os.path.exists(self.video_path):
+            raise FileNotFoundError(f'Video path: {os.path.abspath(video_path)} is not exist or cannot be read.')
+
+        self.cap = None
+        self.length = None
+        self.fourcc = None
+        self.fps = None
+        self.width = None
+        self.height = None
+        self.video_name = None
+
+    def initial_video_capture(self):
+        self.cap = cv2.VideoCapture(self.video_path)
 
         if not self.cap.isOpened():
-            raise FileNotFoundError(f'Video path: {os.path.abspath(video_path)} is not exist or cannot be read.')
+            raise FileNotFoundError(f'Video path: {os.path.abspath(self.video_path)} is cannot be read.')
 
         self.length = round(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.fourcc = round(self.cap.get(cv2.CAP_PROP_FOURCC))
         self.fps = round(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = round(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = round(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.video_name = os.path.basename(video_path)[:-4]
+        self.video_name = os.path.basename(self.video_path)[:-4]
 
     def video2images(self, save_path: str, extension: str = 'jpg', start: float = 0, end: float = None, jump: float = 1, option: str = 'frame', size=None):
         """
@@ -37,6 +50,8 @@ class VideoTools:
         :param size: if size type is tuple resize (height, width), else if size type float, resize size times
         :return: True
         """
+
+        self.initial_video_capture()
 
         if end is None:
             end = self.length
@@ -71,6 +86,8 @@ class VideoTools:
         :return: True
         """
 
+        self.initial_video_capture()
+
         if type(size) is float or type(size) is int:
             size = [round(self.height * size), round(self.width * size)]
         out = cv2.VideoWriter(save_path, self.fourcc, self.fps, (size[1], size[0]))
@@ -101,6 +118,126 @@ class VideoTools:
             size = size[::-1]
 
         moviepy.editor.VideoFileClip(self.video_path).resize(size).speedx(speed).write_gif(save_path)
+
+
+class MultiProcess:
+    def __init__(self, cpu_n: int = mp.cpu_count()):
+        """
+        initial function
+        :param cpu_n: the number of cpus number that you want use (default: the number of the all cpus)
+        """
+
+        self.cpu_n = cpu_n
+
+    def duplicate_func(self, func, args: tuple):
+        """
+        Run the function as multiprocess
+        :param func: the function for running multiprocess
+        :param args: arguments for function
+        :return: True
+        """
+
+        i = 0
+        j = 0
+
+        if self.cpu_n < len(args):
+            for i in range(len(args) // self.cpu_n):
+                pro = list()
+                for j in range(self.cpu_n):
+                    pro.append(mp.Process(target=func, args=args[i * self.cpu_n + j]))
+                for mul in pro: mul.start()
+                for mul in pro: mul.join()
+
+            pro = list()
+            for left in range(self.cpu_n * i + j + 1, len(args)):
+                pro.append(mp.Process(target=func, args=args[left]))
+            for mul in pro: mul.start()
+            for mul in pro: mul.join()
+
+        else:
+            pro = list()
+            for left in range(0, len(args)):
+                pro.append(mp.Process(target=func, args=args[left]))
+            for mul in pro: mul.start()
+            for mul in pro: mul.join()
+
+        return True
+
+    def multi_func(self, funcs: tuple, args: tuple):
+        """
+        Run the function as multiprocess
+        :param funcs: the functions for running multiprocess
+        :param args: arguments for function
+        :return: True
+        """
+
+        i = 0
+        j = 0
+
+        if self.cpu_n < len(args):
+            for i in range(len(args) // self.cpu_n):
+                pro = list()
+                for j in range(self.cpu_n):
+                    pro.append(mp.Process(target=funcs[i * self.cpu_n + j], args=args[i * self.cpu_n + j]))
+                for mul in pro: mul.start()
+                for mul in pro: mul.join()
+
+            pro = list()
+            for left in range(self.cpu_n * i + j + 1, len(args)):
+                pro.append(mp.Process(target=funcs[left], args=args[left]))
+            for mul in pro: mul.start()
+            for mul in pro: mul.join()
+
+        else:
+            pro = list()
+            for left in range(0, len(args)):
+                pro.append(mp.Process(target=funcs[left], args=args[left]))
+            for mul in pro: mul.start()
+            for mul in pro: mul.join()
+
+        return True
+
+    @staticmethod
+    def wrapper(data, *args, **kwargs):
+        try:
+            import dill
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError('video2gif is needed dill! Try <pip install dill>.')
+
+        func = dill.loads(data)
+        return func(*args, **kwargs)
+
+    @staticmethod
+    def adapt_function(function, order=False):
+        """
+        Example
+
+        processor = pt.MultiProcess()
+        outputs = Queue()  # outputs need to be queued.
+        adapt_func = processor.adapt_function(FUNCTION, order=True)
+
+        processor.duplicate_func(pt.wrapper, ((adapt_func, 1, outputs, (PRAMS, )), (adapt_func, 0, outputs, (PRAMS, ))))
+        print([outputs.get() for _ in range(2)])
+
+        :param function: multiple functions
+        :param order: if you need to order it will be True.
+        :return: dill function
+        """
+        try:
+            import dill
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError('video2gif is needed moviepy! Try <pip install dill>.')
+
+        if order:
+            def adapted_function(num, outputs: mp.queues.Queue, *args, **kwargs):
+                output = function(*args, **kwargs)
+                outputs.put((num, output))
+
+        else:
+            def adapted_function(outputs: mp.queues.Queue, *args, **kwargs):
+                outputs.put(function(*args, **kwargs))
+
+        return dill.dumps(adapted_function)
 
 
 def create_folder(directory, warning: bool = True):
@@ -163,6 +300,9 @@ def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()):
     :param cpu_n: the number of cpus number that you want use (default: the number of the all cpus)
     :return: True
     """
+
+    i = 0
+    j = 0
 
     if cpu_n < len(args):
         for i in range(len(args) // cpu_n):
