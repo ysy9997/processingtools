@@ -197,6 +197,21 @@ class MultiProcess:
 
         return True
 
+    def split_list(self, *args):
+        outputs = list()
+        quotient, remainder = divmod(len(args[0]), self.cpu_n)
+
+        for arg in args:
+            result = list()
+            for i in range(self.cpu_n):
+                start = i * quotient + min(i, remainder)
+                end = (i + 1) * quotient + min(i + 1, remainder)
+                result.append(arg[start:end])
+
+            outputs.append(result)
+
+        return outputs
+
     @staticmethod
     def wrapper(data, *args, **kwargs):
         try:
