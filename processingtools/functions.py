@@ -6,6 +6,7 @@ import multiprocessing as mp
 import argparse
 import processingtools.PrgressBar
 import time
+import warnings
 
 
 class VideoTools:
@@ -38,7 +39,7 @@ class VideoTools:
         self.height = round(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.video_name = os.path.basename(self.video_path)[:-4]
 
-    def video2images(self, save_path: str, extension: str = 'jpg', start: float = 0, end: float = None, jump: float = 1, option: str = 'frame', size=None):
+    def video2images(self, save_path: str, extension: str = 'jpg', start: float = 0, end: float = None, jump: float = 1, option: str = 'frame', size=None) -> True:
         """
         video to image files
         :param save_path: video file directory, save_path: save png directory
@@ -78,7 +79,7 @@ class VideoTools:
 
         return True
 
-    def video_resize(self, save_path: str, size):
+    def video_resize(self, save_path: str, size) -> True:
         """
         video resize as size
         :param save_path: save_path path
@@ -314,7 +315,7 @@ def read_images(dir_path: str, img_format: str = None):
         return [cv2.imread(_) for _ in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
 
 
-def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()):
+def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()) -> True:
     """
     Run the function as multiprocess
     :param func: the function for running multiprocess
@@ -322,6 +323,8 @@ def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()):
     :param cpu_n: the number of cpus number that you want use (default: the number of the all cpus)
     :return: True
     """
+
+    warnings.warn('The function multi_func will be deprecated in the next version. Use the class MultiProcess instead.')
 
     i = 0
     j = 0
@@ -359,6 +362,8 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     :param fourcc: video fourcc (default: cv2.VideoWriter_fourcc(*'DIVX'))
     :return: True
     """
+
+    warnings.warn('The function multi_func will be deprecated in the next version. Use the class MultiProcess instead.')
 
     # when run in window, should replace backslash
     images_path = images_path.replace('\\', '/')

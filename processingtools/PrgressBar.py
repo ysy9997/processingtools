@@ -1,7 +1,6 @@
 import time
 import itertools
 import numpy as np
-import warnings
 
 
 class ProgressBar:
@@ -15,7 +14,7 @@ class ProgressBar:
     """
 
     def __init__(self, in_loop, bar_length: int = 40, start_mark: str = None, finish_mark='progress done!',
-                 max: int = None, total: int = None, detail_func: callable = None, smoothing: int = None):
+                 total: int = None, detail_func: callable = None, smoothing: int = None):
         """
         The initial function
         :param in_loop: the input loop
@@ -38,9 +37,6 @@ class ProgressBar:
         self.it = iter([i for i in range(in_loop)]) if type(in_loop) == int else iter(in_loop)
 
         if total: self.length = total
-        elif max:
-            warnings.warn('parameter max will be deprecated in the next version. Use total instead.')
-            self.length = max
         else:
             self.it, copy_it = itertools.tee(self.it)
             self.length = 0
