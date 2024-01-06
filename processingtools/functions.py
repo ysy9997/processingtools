@@ -223,7 +223,7 @@ class MultiProcess:
         try:
             import dill
         except ModuleNotFoundError:
-            raise ModuleNotFoundError('video2gif is needed dill! Try <pip install dill>.')
+            raise ModuleNotFoundError('wrapper is needed dill! Try <pip install dill>.')
 
         func = dill.loads(data)
         return func(*args, **kwargs)
@@ -248,7 +248,7 @@ class MultiProcess:
         try:
             import dill
         except ModuleNotFoundError:
-            raise ModuleNotFoundError('video2gif is needed moviepy! Try <pip install dill>.')
+            raise ModuleNotFoundError('adapt_function is needed moviepy! Try <pip install dill>.')
 
         if order:
             def adapted_function(num, outputs: mp.queues.Queue, *args, **kwargs):
