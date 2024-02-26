@@ -130,24 +130,23 @@ class BundleLoss(torch.nn.Module):
     Bundle input criterions
     """
 
-    def __init__(self, criterions: list, reduction: str = 'Sum'):
+    def __init__(self, criterions: list, reduction: str = 'Sum', weights=None):
         super().__init__()
         self.criterions = criterions
         self.reduction = reduction
+        self.weights = [1 for _ in self.criterions] if weights is None else weights
 
     def forward(self, predictions, targets):
-        loss = None
-        if self.reduction == 'Sum':
-            loss = 0
-            for criterion in self.criterions:
-                loss = loss + criterion(predictions, targets)
+        loss_result = 0 if self.reduction == 'Sum' else []
 
-        elif self.reduction == 'None':
-            loss = list()
-            for criterion in self.criterions:
-                loss.append(criterion(predictions, targets))
+        for criterion, weight in zip(self.criterions, self.weights):
+            loss = criterion(predictions, targets) * weight
+            if self.reduction == 'Sum':
+                loss_result = loss_result + loss
+            elif self.reduction == 'None':
+                loss_result.append(loss)
 
-        return loss
+        return loss_result
 
 
 def print_recoder(recoder, string: str):
