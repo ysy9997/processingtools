@@ -148,6 +148,51 @@ class GradCam:
         return True
 
 
+class HOA(torch.nn.Module):
+    """
+    High Order Attention module.
+    Chen, Binghui, Weihong Deng, and Jiani Hu. "Mixed high-order attention network for person re-identification."
+        Proceedings of the IEEE/CVF international conference on computer vision. 2019.
+    https://openaccess.thecvf.com/content_ICCV_2019/papers/Chen_Mixed_High-Order_Attention_Network_for_Person_Re-Identification_ICCV_2019_paper.pdf
+    """
+
+    def __init__(self, in_channels: int, r: int = 3, activation: str = 'ReLU') -> None:
+        """
+        initial function
+        :param in_channels: the number of input channels
+        :param r: order for attention module
+        :param activation: activation function for MOA
+        """
+
+        super().__init__()
+
+        self.conv2ds = []
+        for i in range(r):
+            self.conv2ds.append([torch.nn.Conv2d(in_channels, in_channels, 1) for _ in range(i + 1)])
+
+        self.sequentials = [torch.nn.Sequential(getattr(torch.nn, activation)(), torch.nn.Conv2d(in_channels, in_channels, 1)) for _ in range(r)]
+
+        self.sigmoid = torch.nn.Sigmoid()
+
+    def forward(self, x) -> torch.Tensor:
+        cs = []
+        for conv2d, sequential in zip(self.conv2ds, self.sequentials):
+            z1s = [_(x) for _ in conv2d]
+
+            c = torch.ones_like(x)
+            for z1 in z1s:
+                c *= z1
+
+            c = sequential(c)
+            cs.append(c)
+
+        outs = torch.zeros_like(x)
+        for c in cs:
+            outs += c
+
+        return outs
+
+
 def torch_img_show(img):
     """
     :param img: torch tensor image
