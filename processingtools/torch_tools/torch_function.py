@@ -166,11 +166,13 @@ class HOA(torch.nn.Module):
 
         super().__init__()
 
-        self.conv2ds = []
+        conv2ds = []
         for i in range(r):
-            self.conv2ds.append([torch.nn.Conv2d(in_channels, in_channels, 1) for _ in range(i + 1)])
+            conv2ds.append(torch.nn.ModuleList([torch.nn.Conv2d(in_channels, in_channels, 1) for _ in range(i + 1)]))
+        self.conv2ds = torch.nn.ModuleList(conv2ds)
 
-        self.sequentials = [torch.nn.Sequential(getattr(torch.nn, activation)(), torch.nn.Conv2d(in_channels, in_channels, 1)) for _ in range(r)]
+        sequentials = [torch.nn.Sequential(getattr(torch.nn, activation)(), torch.nn.Conv2d(in_channels, in_channels, 1)) for _ in range(r)]
+        self.sequentials = torch.nn.ModuleList(sequentials)
 
         self.sigmoid = torch.nn.Sigmoid()
 
@@ -190,7 +192,7 @@ class HOA(torch.nn.Module):
         for c in cs:
             outs += c
 
-        return outs
+        return outs * x
 
 
 def torch_img_show(img):
