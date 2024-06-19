@@ -61,11 +61,11 @@ class ProgressBar:
             print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
                   f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |'
                   f' {self.detail_func(out)} |', end='')
-        elif end:
-            print('\r', end='\r')
         else:
             print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
                   f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |', end='')
+        if end:
+            print('\r', end='\r')
 
     def __next__(self):
         """
@@ -79,7 +79,7 @@ class ProgressBar:
             self.print_info(bar, '', '100.0', '0s', None, end=True)
 
             if self.finish_mark:
-                print(f'\n\033[5m{self.finish_mark}\033[0m({round(time.time() * 1000 - self.start)}ms)\n')
+                print(f'\n\033[5m{self.finish_mark}\033[0m ({round(time.time() * 1000 - self.start)}ms)\n')
 
             raise StopIteration
         else:
