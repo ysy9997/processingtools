@@ -490,3 +490,54 @@ def zero_padding(max_num, present_num):
     zeros = f'0{n_zero}d'
 
     return f'{present_num:{zeros}}'
+
+
+def print_style(text, foreground_rgb=None, background_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
+    """
+    Prints the given text with specified color and style.
+    :param text: the text to be printed
+    :param foreground_rgb: the RGB color code for the text color
+    :param background_rgb: the RGB color code for the background color
+    :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
+    :param sep: the separator to be used in the print function
+    :param end: the end character to be used in the print function
+    :param file: the file where the output will be written
+    :return: None
+    """
+
+    if background_rgb is None:
+        background_rgb = []
+    if foreground_rgb is None:
+        foreground_rgb = []
+
+    if 'bold' in styles:
+        text = f'\033[1m{text}'
+    if 'tilt' in styles:
+        text = f'\033[3m{text}'
+    if 'underscore' in styles:
+        text = f'\033[4m{text}'
+    if 'cancel' in styles:
+        text = f'\033[9m{text}'
+
+    i = 0
+    while i < 3 and i < len(foreground_rgb):
+        foreground_rgb[i] = int(foreground_rgb[i])
+        if foreground_rgb[i] < 0:
+            foreground_rgb[i] = 0
+        elif foreground_rgb[i] > 255:
+            foreground_rgb[i] = 255
+        i += 1
+
+    i = 0
+    while i < 3 and i < len(background_rgb):
+        background_rgb[i] = int(background_rgb[i])
+        if background_rgb[i] < 0:
+            background_rgb[i] = 0
+        elif background_rgb[i] > 255:
+            background_rgb[i] = 255
+        i += 1
+
+    text = f'\033[38;2;{foreground_rgb[0]};{foreground_rgb[1]};{foreground_rgb[2]}m{text}' if len(foreground_rgb) == 3 else text
+    text = f'\033[48;2;{background_rgb[0]};{background_rgb[1]};{background_rgb[2]}m{text}' if len(background_rgb) == 3 else text
+
+    print(f'{text}\033[0m', sep=sep, end=end, file=file)
