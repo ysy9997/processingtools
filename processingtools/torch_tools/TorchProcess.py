@@ -1,5 +1,5 @@
 import torch
-import processingtools.PrgressBar
+import processingtools.ProgressBar
 import processingtools.functions
 
 

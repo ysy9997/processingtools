@@ -4,7 +4,7 @@ import os
 import glob
 import multiprocessing as mp
 import argparse
-import processingtools.PrgressBar
+import processingtools.ProgressBar
 import time
 import warnings
 
@@ -518,6 +518,8 @@ def print_style(text, foreground_rgb=None, background_rgb=None, styles: tuple = 
         text = f'\033[4m{text}'
     if 'cancel' in styles:
         text = f'\033[9m{text}'
+    if 'flicker' in styles:
+        text = f'\033[5m{text}'
 
     i = 0
     while i < 3 and i < len(foreground_rgb):

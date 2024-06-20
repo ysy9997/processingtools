@@ -1,3 +1,3 @@
 from processingtools.functions import *
-from processingtools.PrgressBar import *
+from processingtools.ProgressBar import *
 from processingtools.EnvReco import *

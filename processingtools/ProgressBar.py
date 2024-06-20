@@ -71,7 +71,7 @@ class ProgressBar:
 
         # when the loop finished
         if self.index == self.length:
-            bar = '█' * self.bar_length
+            bar = ''.join([f'\033[38;2;{255 - i * 255 // self.bar_length};{255};{0}m█' for i in range(self.bar_length)])
             self.print_info(bar, '', '100.0', '0s', None, end=True)
 
             if self.finish_mark:
@@ -81,8 +81,9 @@ class ProgressBar:
         else:
             progress_per = self.index / self.length * 100
             progress_per_str = str(int(progress_per * 10) / 10)
-            bar = '█' * int(self.bar_length / 100 * progress_per)
+            bar = '\033[38;2;255;255;0m' + ''.join([f'\033[38;2;{255 - i * 255 // self.bar_length};{255};{0}m█' for i in range(int(self.bar_length / 100 * progress_per))])
             space = '░' * (self.bar_length - int(self.bar_length / 100 * progress_per))
+            space = f'{space}\033[0m'
 
             if self.index == 0:
                 # The first loop is not finished yet, so that it cannot be calculated
