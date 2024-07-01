@@ -486,15 +486,22 @@ def timer(input_function):
 
 
 def zero_padding(max_num, present_num):
-    n_zero = int(np.log10(max_num)) + 1
-    zeros = f'0{n_zero}d'
+    """
+    this function is used to pad zeros to a number based on the maximum number in the dataset.
+    :param max_num: the maximum number in the dataset. it is used to determine the total number of digits.
+    :param present_num: the current number that needs to be padded with zeros.
+    :return: the zero-padded result.
+    """
 
-    return f'{present_num:{zeros}}'
+    num_digits = len(str(max_num))
+    format_string = f'0{num_digits}d'
+
+    return f'{present_num:{format_string}}'
 
 
 def sprint(text, foreground_rgb=None, background_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
     """
-    Prints the given text with specified color and style.
+    prints the given text with specified color and style.
     :param text: the text to be printed
     :param foreground_rgb: the RGB color code for the text color
     :param background_rgb: the RGB color code for the background color
