@@ -492,7 +492,7 @@ def zero_padding(max_num, present_num):
     return f'{present_num:{zeros}}'
 
 
-def print_style(text, foreground_rgb=None, background_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
+def sprint(text, foreground_rgb=None, background_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
     """
     Prints the given text with specified color and style.
     :param text: the text to be printed
@@ -505,41 +505,30 @@ def print_style(text, foreground_rgb=None, background_rgb=None, styles: tuple = 
     :return: None
     """
 
-    if background_rgb is None:
-        background_rgb = []
-    if foreground_rgb is None:
-        foreground_rgb = []
+    # define style codes
+    style_codes = {
+        'bold': '\033[1m',
+        'tilt': '\033[3m',
+        'underscore': '\033[4m',
+        'cancel': '\033[9m',
+        'flicker': '\033[5m'
+    }
 
-    if 'bold' in styles:
-        text = f'\033[1m{text}'
-    if 'tilt' in styles:
-        text = f'\033[3m{text}'
-    if 'underscore' in styles:
-        text = f'\033[4m{text}'
-    if 'cancel' in styles:
-        text = f'\033[9m{text}'
-    if 'flicker' in styles:
-        text = f'\033[5m{text}'
+    # apply styles to the text
+    for style in styles:
+        if style not in style_codes:
+            raise ValueError(f"Invalid styles: {style}. Valid options are: {list(style_codes.keys())}")
+        text = f'{style_codes.get(style, "")}{text}'
 
-    i = 0
-    while i < 3 and i < len(foreground_rgb):
-        foreground_rgb[i] = int(foreground_rgb[i])
-        if foreground_rgb[i] < 0:
-            foreground_rgb[i] = 0
-        elif foreground_rgb[i] > 255:
-            foreground_rgb[i] = 255
-        i += 1
+    # set text color
+    if foreground_rgb:
+        foreground_rgb = [max(0, min(255, int(c))) for c in foreground_rgb[:3]]
+        text = f'\033[38;2;{foreground_rgb[0]};{foreground_rgb[1]};{foreground_rgb[2]}m{text}'
 
-    i = 0
-    while i < 3 and i < len(background_rgb):
-        background_rgb[i] = int(background_rgb[i])
-        if background_rgb[i] < 0:
-            background_rgb[i] = 0
-        elif background_rgb[i] > 255:
-            background_rgb[i] = 255
-        i += 1
+    # set background color
+    if background_rgb:
+        background_rgb = [max(0, min(255, int(c))) for c in background_rgb[:3]]
+        text = f'\033[48;2;{background_rgb[0]};{background_rgb[1]};{background_rgb[2]}m{text}'
 
-    text = f'\033[38;2;{foreground_rgb[0]};{foreground_rgb[1]};{foreground_rgb[2]}m{text}' if len(foreground_rgb) == 3 else text
-    text = f'\033[48;2;{background_rgb[0]};{background_rgb[1]};{background_rgb[2]}m{text}' if len(background_rgb) == 3 else text
-
+    # print the final text
     print(f'{text}\033[0m', sep=sep, end=end, file=file)
