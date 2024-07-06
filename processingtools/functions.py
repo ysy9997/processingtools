@@ -7,6 +7,7 @@ import argparse
 import processingtools.ProgressBar
 import time
 import warnings
+import __main__
 
 
 class VideoTools:
@@ -130,38 +131,18 @@ class MultiProcess:
 
         self.cpu_n = cpu_n
 
-    def duplicate_func(self, func, args: tuple):
+    def duplicate_func(self, func, args_list: tuple):
         """
         Run the function as multiprocess
         :param func: the function for running multiprocess
-        :param args: arguments for function
+        :param args_list: arguments for function
         :return: True
         """
 
-        i = 0
-        j = 0
-
-        if self.cpu_n < len(args):
-            for i in range(len(args) // self.cpu_n):
-                pro = list()
-                for j in range(self.cpu_n):
-                    pro.append(mp.Process(target=func, args=args[i * self.cpu_n + j]))
-                for mul in pro: mul.start()
-                for mul in pro: mul.join()
-
-            pro = list()
-            for left in range(self.cpu_n * i + j + 1, len(args)):
-                pro.append(mp.Process(target=func, args=args[left]))
-            for mul in pro: mul.start()
-            for mul in pro: mul.join()
-
-        else:
-            pro = list()
-            for left in range(0, len(args)):
-                pro.append(mp.Process(target=func, args=args[left]))
-            for mul in pro: mul.start()
-            for mul in pro: mul.join()
-
+        with mp.Pool(processes=self.cpu_n) as pool:
+            results = [pool.apply_async(func, args) for args in args_list]
+            for result in results:
+                result.get()
         return True
 
     def multi_func(self, funcs: tuple, args: tuple):
@@ -172,30 +153,10 @@ class MultiProcess:
         :return: True
         """
 
-        i = 0
-        j = 0
-
-        if self.cpu_n < len(args):
-            for i in range(len(args) // self.cpu_n):
-                pro = list()
-                for j in range(self.cpu_n):
-                    pro.append(mp.Process(target=funcs[i * self.cpu_n + j], args=args[i * self.cpu_n + j]))
-                for mul in pro: mul.start()
-                for mul in pro: mul.join()
-
-            pro = list()
-            for left in range(self.cpu_n * i + j + 1, len(args)):
-                pro.append(mp.Process(target=funcs[left], args=args[left]))
-            for mul in pro: mul.start()
-            for mul in pro: mul.join()
-
-        else:
-            pro = list()
-            for left in range(0, len(args)):
-                pro.append(mp.Process(target=funcs[left], args=args[left]))
-            for mul in pro: mul.start()
-            for mul in pro: mul.join()
-
+        with mp.Pool(processes=self.cpu_n) as pool:
+            results = [pool.apply_async(func, args) for func, args in zip(funcs, args)]
+            for result in results:
+                result.get()
         return True
 
     def split_list(self, *args):
