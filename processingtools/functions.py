@@ -224,22 +224,61 @@ class MultiProcess:
         return dill.dumps(adapted_function)
 
 
-def create_folder(directory, warning: bool = True):
+def warning_format(message, category, filename, lineno, line=None):
+    """
+    Custom warning format for warnings module.
+    :param message: The warning message.
+    :param category: The category of the warning.
+    :param filename: The name of the file in which the warning was raised.
+    :param lineno: The line number where the warning was raised.
+    :param line: The line of code that raised the warning.
+    :return: A string containing a warning message.
+    """
+
+    return f'{category.__name__}: {message}\n'
+
+
+def custom_warning_format(func):
+    """
+    Decorator for applying a custom warning format to a function.
+    :param func: The function to apply the custom warning format to.
+    :return: The decorated function.
+    """
+
+    def wrapper(*args, **kwargs):
+        original_format = warnings.formatwarning
+        warnings.formatwarning = warning_format
+        try:
+            result = func(*args, **kwargs)
+        finally:
+            warnings.formatwarning = original_format
+        return result
+    return wrapper
+
+
+@custom_warning_format
+def create_folder(directory, print_warning: bool = True):
     """
     create folder when folder is not exist
     :param directory: the path which is verified exist
-    :param warning: print warning when folder is not exist
+    :param print_warning: print warning when folder is not exist
     :return: True when directory is created
     """
 
+    directory = os.path.abspath(directory)
+
     try:
         if not os.path.exists(directory):
-            print(f'\033[31m{directory} is created. \033[0m') if warning else None
+            if print_warning:
+                print(f'{directory} is created.')
             os.makedirs(directory)
             return True
-        else: return False
+        else:
+            if print_warning:
+                warnings.warn(f'{directory} is already exist.')
+            return False
     except OSError:
-        print('Error: Creating directory. ' + directory)
+        raise OSError(f'Error: Creating directory. ({directory})')
 
 
 def read_images_list(dir_path: str, img_format: str = None):
@@ -276,6 +315,7 @@ def read_images(dir_path: str, img_format: str = None):
         return [cv2.imread(_) for _ in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
 
 
+@custom_warning_format
 def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()) -> True:
     """
     Run the function as multiprocess
@@ -285,7 +325,7 @@ def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()) -> True:
     :return: True
     """
 
-    warnings.warn('The function multi_func will be deprecated in the next version. Use the class MultiProcess instead.')
+    warnings.warn(f'{multi_func.__name__} will be deprecated in the next version. Use the class MultiProcess instead.', DeprecationWarning)
 
     i = 0
     j = 0
@@ -314,17 +354,18 @@ def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()) -> True:
     return True
 
 
+@custom_warning_format
 def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2.VideoWriter_fourcc(*'DIVX')):
     """
     make avi file using images in path
     :param images_path: directory path for images
     :param save_path: directory path for video
-    :param fps: video fps (default: 60)
+    :param fps:  frame per second (default: 60)
     :param fourcc: video fourcc (default: cv2.VideoWriter_fourcc(*'DIVX'))
     :return: True
     """
 
-    warnings.warn('The function multi_func will be deprecated in the next version. Use the class MultiProcess instead.')
+    warnings.warn(f'{png2video.__name__} will be deprecated in the next version. Use the class VideoTools instead.', DeprecationWarning)
 
     # when run in window, should replace backslash
     images_path = images_path.replace('\\', '/')
