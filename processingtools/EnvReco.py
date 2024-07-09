@@ -42,7 +42,7 @@ class EnvReco:
         if varify_exist and os.path.exists(self.save_path):
             raise OSError(f'{self.save_path} already exist.')
         if not os.path.exists(self.save_path):
-            processingtools.functions.create_folder(self.save_path, warning=False)
+            processingtools.functions.create_folder(self.save_path, print_warning=False)
 
         self.logs = open(f'{save_path}/logs.txt', 'a')
         self.project_root_path = os.path.dirname(os.path.abspath(__file__)) if project_root_path is None else project_root_path
