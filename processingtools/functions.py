@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import os
 import glob
 import multiprocessing as mp
@@ -7,7 +6,7 @@ import argparse
 import processingtools.ProgressBar
 import time
 import warnings
-import __main__
+import typing
 
 
 class VideoTools:
@@ -131,32 +130,54 @@ class MultiProcess:
 
         self.cpu_n = cpu_n
 
-    def duplicate_func(self, func, args_list: tuple):
+    def duplicate_func(self, func, args_list: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True):
         """
         Run the function as multiprocess
         :param func: the function for running multiprocess
         :param args_list: arguments for function
+        :param progress_args: arguments for ProgressBar. if False, it doesn't use progressbar, if True it uses progressbar.
         :return: True
         """
 
+        if type(progress_args) is not dict and type(progress_args) is not bool:
+            raise TypeError('type of progress_args is needed dict or bool')
+
         with mp.Pool(processes=self.cpu_n) as pool:
             results = [pool.apply_async(func, args) for args in args_list]
-            for result in results:
-                result.get()
+            if progress_args is True:
+                for result in processingtools.ProgressBar(results):
+                    result.get()
+            elif progress_args:
+                for result in processingtools.ProgressBar(results, **progress_args):
+                    result.get()
+            else:
+                for result in results:
+                    result.get()
         return True
 
-    def multi_func(self, funcs: tuple, args: tuple):
+    def multi_func(self, funcs: typing.Union[tuple, list], args: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True):
         """
         Run the function as multiprocess
         :param funcs: the functions for running multiprocess
         :param args: arguments for function
+        :param progress_args: arguments for ProgressBar. if False, it doesn't use progressbar, if True it uses progressbar.
         :return: True
         """
 
+        if type(progress_args) is not dict and type(progress_args) is not bool:
+            raise TypeError('type of progress_args is needed dict or bool')
+
         with mp.Pool(processes=self.cpu_n) as pool:
             results = [pool.apply_async(func, args) for func, args in zip(funcs, args)]
-            for result in results:
-                result.get()
+            if progress_args is True:
+                for result in processingtools.ProgressBar(results):
+                    result.get()
+            elif progress_args:
+                for result in processingtools.ProgressBar(results, **progress_args):
+                    result.get()
+            else:
+                for result in results:
+                    result.get()
         return True
 
     def split_list(self, *args):
@@ -516,17 +537,14 @@ def zero_padding(max_num, present_num):
     return f'{present_num:{format_string}}'
 
 
-def sprint(text, foreground_rgb=None, background_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
+def s_text(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
     """
     prints the given text with specified color and style.
     :param text: the text to be printed
-    :param foreground_rgb: the RGB color code for the text color
-    :param background_rgb: the RGB color code for the background color
+    :param f_rgb: the RGB color code for the text color
+    :param b_rgb: the RGB color code for the background color
     :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
-    :param sep: the separator to be used in the print function
-    :param end: the end character to be used in the print function
-    :param file: the file where the output will be written
-    :return: None
+    :return: str
     """
 
     # define style codes
@@ -545,14 +563,29 @@ def sprint(text, foreground_rgb=None, background_rgb=None, styles: tuple = (), s
         text = f'{style_codes.get(style, "")}{text}'
 
     # set text color
-    if foreground_rgb:
-        foreground_rgb = [max(0, min(255, int(c))) for c in foreground_rgb[:3]]
+    if f_rgb:
+        foreground_rgb = [max(0, min(255, int(c))) for c in f_rgb[:3]]
         text = f'\033[38;2;{foreground_rgb[0]};{foreground_rgb[1]};{foreground_rgb[2]}m{text}'
 
     # set background color
-    if background_rgb:
-        background_rgb = [max(0, min(255, int(c))) for c in background_rgb[:3]]
+    if b_rgb:
+        background_rgb = [max(0, min(255, int(c))) for c in b_rgb[:3]]
         text = f'\033[48;2;{background_rgb[0]};{background_rgb[1]};{background_rgb[2]}m{text}'
 
-    # print the final text
-    print(f'{text}\033[0m', sep=sep, end=end, file=file)
+    return text
+
+
+def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
+    """
+    prints the given text with specified color and style.
+    :param text: the text to be printed
+    :param f_rgb: the RGB color code for the text color
+    :param b_rgb: the RGB color code for the background color
+    :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
+    :param sep: the separator to be used in the print function
+    :param end: the end character to be used in the print function
+    :param file: the file where the output will be written
+    :return: None
+    """
+
+    print(f'{s_text(text, f_rgb, b_rgb, styles)}\033[0m', sep=sep, end=end, file=file)
