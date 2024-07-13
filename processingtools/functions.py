@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import os
 import glob
 import multiprocessing as mp
@@ -7,7 +6,7 @@ import argparse
 import processingtools.ProgressBar
 import time
 import warnings
-import __main__
+import typing
 
 
 class VideoTools:
@@ -131,32 +130,54 @@ class MultiProcess:
 
         self.cpu_n = cpu_n
 
-    def duplicate_func(self, func, args_list: tuple):
+    def duplicate_func(self, func, args_list: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True):
         """
         Run the function as multiprocess
         :param func: the function for running multiprocess
         :param args_list: arguments for function
+        :param progress_args: arguments for ProgressBar. if False, it doesn't use progressbar, if True it uses progressbar.
         :return: True
         """
 
+        if type(progress_args) is not dict and type(progress_args) is not bool:
+            raise TypeError('type of progress_args is needed dict or bool')
+
         with mp.Pool(processes=self.cpu_n) as pool:
             results = [pool.apply_async(func, args) for args in args_list]
-            for result in results:
-                result.get()
+            if progress_args is True:
+                for result in processingtools.ProgressBar(results):
+                    result.get()
+            elif progress_args:
+                for result in processingtools.ProgressBar(results, **progress_args):
+                    result.get()
+            else:
+                for result in results:
+                    result.get()
         return True
 
-    def multi_func(self, funcs: tuple, args: tuple):
+    def multi_func(self, funcs: typing.Union[tuple, list], args: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True):
         """
         Run the function as multiprocess
         :param funcs: the functions for running multiprocess
         :param args: arguments for function
+        :param progress_args: arguments for ProgressBar. if False, it doesn't use progressbar, if True it uses progressbar.
         :return: True
         """
 
+        if type(progress_args) is not dict and type(progress_args) is not bool:
+            raise TypeError('type of progress_args is needed dict or bool')
+
         with mp.Pool(processes=self.cpu_n) as pool:
             results = [pool.apply_async(func, args) for func, args in zip(funcs, args)]
-            for result in results:
-                result.get()
+            if progress_args is True:
+                for result in processingtools.ProgressBar(results):
+                    result.get()
+            elif progress_args:
+                for result in processingtools.ProgressBar(results, **progress_args):
+                    result.get()
+            else:
+                for result in results:
+                    result.get()
         return True
 
     def split_list(self, *args):
