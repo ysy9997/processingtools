@@ -6,6 +6,9 @@ import torch
 import torchvision.transforms
 import torchvision.transforms.functional
 import torch.nn.functional
+import typing
+import warnings
+import processingtools.functions
 
 
 class QueueTensor:
@@ -521,3 +524,44 @@ class SecondOrderDerivative(torch.nn.Module):
             if x is not None:
                 flatt_grad.append(torch.reshape(x, (-1,)))
         return self.epsilon / torch.norm(torch.cat(flatt_grad)), grad_val
+
+
+class AutoInputModel(torch.nn.Module):
+    @processingtools.functions.custom_warning_format
+    def __init__(self, model, size: typing.Union[tuple, list], mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None, device=None):
+        super().__init__()
+
+        self.model = model
+
+        if transformer is not None and (mean is not None or std is not None):
+            warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).')
+
+        if transformer is not None:
+            self.transform = transformer
+        else:
+            self.transform = torchvision.transforms.Compose([torchvision.transforms.Resize(size=size),
+                                                             torchvision.transforms.ToTensor(),
+                                                             torchvision.transforms.Normalize(mean, std),
+                                                             ])
+
+    def image_read(self, path: str):
+        image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)[None]
+        return self.transform(image)
+
+    @processingtools.functions.custom_warning_format
+    def forward(self, inputs: typing.Union[str, list], device=None) -> torch.Tensor:
+        if self.model.training:
+            warnings.warn('model is training mode now! (if you want to change eval mode, add model.eval())')
+
+        device = next(self.model.parameters()).device if device is None else device
+        print(f'run on {processingtools.functions.s_text(f"{device}", styles=("bold", ))}')
+
+        outputs = []
+        if type(inputs) is list:
+            for i in inputs:
+                outputs.append(self.model(self.image_read(i)))
+
+            return torch.cat(outputs, dim=0)
+
+        else:
+            return self.model(self.image_read(inputs))
