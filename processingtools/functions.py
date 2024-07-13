@@ -65,7 +65,7 @@ class VideoTools:
 
         create_folder(save_path)
 
-        for n, i in processingtools.PrgressBar.ProgressBar(enumerate(range(self.length)), total=self.length, finish_mark=None):
+        for n, i in processingtools.ProgressBar(enumerate(range(self.length)), total=self.length, finish_mark=None):
             ret, frame = self.cap.read()
             if start <= n and ret and n % jump == 0:
                 frame = frame if size is None else cv2.resize(frame, (size[1], size[0]))
@@ -93,7 +93,7 @@ class VideoTools:
             size = [round(self.height * size), round(self.width * size)]
         out = cv2.VideoWriter(save_path, self.fourcc, self.fps, (size[1], size[0]))
 
-        for _ in processingtools.PrgressBar.ProgressBar(range(self.length), total=self.length, finish_mark=None):
+        for _ in processingtools.ProgressBar(range(self.length), total=self.length, finish_mark=None):
             _, frame = self.cap.read()
             out.write(cv2.resize(frame, (size[1], size[0])))
 
@@ -245,6 +245,13 @@ class MultiProcess:
         return dill.dumps(adapted_function)
 
 
+class DeprecationWarningC(UserWarning):
+    """ Base class for warnings about deprecated features. """
+
+    def __init__(self, *args, **kwargs):  # real signature unknown
+        super().__init__(*args, **kwargs)
+
+
 def warning_format(message, category, filename, lineno, line=None):
     """
     Custom warning format for warnings module.
@@ -278,13 +285,19 @@ def custom_warning_format(func):
 
 
 @custom_warning_format
-def create_folder(directory, print_warning: bool = True):
+def create_folder(directory, print_warning: bool = True, warning=None):
     """
     create folder when folder is not exist
     :param directory: the path which is verified exist
     :param print_warning: print warning when folder is not exist
+    :param warning: print warning when folder is not exist (argument warning will be deprecated in the next version. Use the print_warning instead.)
     :return: True when directory is created
     """
+
+    if warning is not None:
+        warnings.warn(f'argument warning will be deprecated in the next version. Use the print_warning instead.', DeprecationWarning)
+        warnings.warn(f'argument warning will be deprecated in the next version. Use the print_warning instead.', DeprecationWarningC)
+        print_warning = warning
 
     directory = os.path.abspath(directory)
 
@@ -347,6 +360,7 @@ def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()) -> True:
     """
 
     warnings.warn(f'{multi_func.__name__} will be deprecated in the next version. Use the class MultiProcess instead.', DeprecationWarning)
+    warnings.warn(f'{multi_func.__name__} will be deprecated in the next version. Use the class MultiProcess instead.', DeprecationWarningC)
 
     i = 0
     j = 0
@@ -387,6 +401,7 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     """
 
     warnings.warn(f'{png2video.__name__} will be deprecated in the next version. Use the class VideoTools instead.', DeprecationWarning)
+    warnings.warn(f'{png2video.__name__} will be deprecated in the next version. Use the class VideoTools instead.', DeprecationWarningC)
 
     # when run in window, should replace backslash
     images_path = images_path.replace('\\', '/')
@@ -401,7 +416,7 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     h, w, _ = cv2.imread(files[0]).shape
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
 
-    for i in processingtools.PrgressBar.ProgressBar(files):
+    for i in processingtools.ProgressBar(files):
         out.write(cv2.imread(i))
 
     out.release()
