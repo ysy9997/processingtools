@@ -312,7 +312,7 @@ def create_folder(directory, print_warning: bool = True, warning=None):
                 warnings.warn(f'{directory} is already exist.')
             return False
     except OSError:
-        raise OSError(f'Error: Creating directory. ({directory})')
+        raise OSError(f'Error: Cannot create directory. ({directory})')
 
 
 def read_images_list(dir_path: str, img_format: str = None):
