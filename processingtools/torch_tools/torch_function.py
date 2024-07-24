@@ -569,7 +569,7 @@ class AutoInputModel(torch.nn.Module):
 
 def gpu_env() -> None:
     """
-    Check and display GPU availability and details.
+    check and display GPU availability and details.
     :return: None
     """
 
