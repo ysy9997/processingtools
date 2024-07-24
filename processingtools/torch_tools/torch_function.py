@@ -565,3 +565,18 @@ class AutoInputModel(torch.nn.Module):
 
         else:
             return self.model(self.image_read(inputs))
+
+
+def gpu_env() -> None:
+    """
+    Check and display GPU availability and details.
+    :return: None
+    """
+
+    num_gpus = torch.cuda.device_count()
+
+    print(f'GPU usable: {"Yes" if torch.cuda.is_available() else "No"}')
+    print(f'Number of detected GPUs: {num_gpus}')
+
+    for i in range(num_gpus):
+        print(f'    • GPU {i}: {torch.cuda.get_device_name(i)}')
