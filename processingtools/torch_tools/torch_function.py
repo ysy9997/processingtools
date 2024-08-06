@@ -527,8 +527,27 @@ class SecondOrderDerivative(torch.nn.Module):
 
 
 class AutoInputModel(torch.nn.Module):
+    """
+    A PyTorch module for automatically processing and normalizing input images.
+
+    This class wraps a given model and provides functionality to read, preprocess, and forward images through the model.
+    It supports custom transformers and normalization parameters.
+    """
+
     @processingtools.functions.custom_warning_format
-    def __init__(self, model, size: typing.Union[tuple, list], mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None, device=None):
+    def __init__(self, model, size: typing.Union[tuple, list], mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None):
+        """
+        initialize the AutoInputModel
+        :param model: model to be used
+        :param size: size to which images will be resized
+        :param mean: mean for normalization
+        :param std: standard deviation for normalization
+        :param transformer: custom transformer for image preprocessing
+        """
+
+        if transformer is None and (mean is None or std is None):
+            raise ValueError('Either transformer must be provided, or both mean and std must be specified.')
+
         super().__init__()
 
         self.model = model
@@ -539,29 +558,55 @@ class AutoInputModel(torch.nn.Module):
         if transformer is not None:
             self.transform = transformer
         else:
-            self.transform = torchvision.transforms.Compose([torchvision.transforms.Resize(size=size),
-                                                             torchvision.transforms.ToTensor(),
-                                                             torchvision.transforms.Normalize(mean, std),
-                                                             ])
+            self.transform = torchvision.transforms.Compose([
+                torchvision.transforms.Resize(size=size),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(mean, std),
+            ])
 
-    def image_read(self, path: str):
-        image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)[None]
-        return self.transform(image)
+    def image_read(self, path: str) -> torch.Tensor:
+        """
+        read and preprocess an image from the given path
+        :param path: image file path
+        :return: normalized image tensor
+        """
+
+        try:
+            image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)[None]
+            return self.transform(image)
+        except Exception as e:
+            raise ValueError(f'Error reading image from path {path}: {e}')
+
+    def get_device(self, device=None) -> None:
+        """
+        get the device to run the model on
+        :param device: device to run the model on
+        :return: device
+        """
+
+        device = next(self.model.parameters()).device if device is None else device
+        print(f'run on {processingtools.functions.s_text(f"{device}", styles=("bold",))}')
 
     @processingtools.functions.custom_warning_format
     def forward(self, inputs: typing.Union[str, list], device=None) -> torch.Tensor:
+        """
+        forward pass of the model
+        :param inputs: string or list of strings representing image paths
+        :param device: device to run the model on
+        :return: model outputs
+        """
+
         if self.model.training:
             warnings.warn('model is training mode now! (if you want to change eval mode, add model.eval())')
 
-        device = next(self.model.parameters()).device if device is None else device
-        print(f'run on {processingtools.functions.s_text(f"{device}", styles=("bold", ))}')
+        self.get_device(device)
 
         outputs = []
-        if type(inputs) is list:
+        if isinstance(inputs, list):
             for i in inputs:
                 outputs.append(self.model(self.image_read(i)))
-
             return torch.cat(outputs, dim=0)
-
-        else:
+        elif isinstance(inputs, str):
             return self.model(self.image_read(inputs))
+        else:
+            raise TypeError('inputs must be a string or a list of strings')
