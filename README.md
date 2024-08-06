@@ -1,4 +1,4 @@
-![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
+![Python 3.7](https://img.shields.io/badge/python-3.7-green.svg)
 
 [![PyPI version](https://badge.fury.io/py/ProcessingTools.svg)](https://badge.fury.io/py/ProcessingTools)
 [![Downloads](https://pepy.tech/badge/processingtools)](https://pepy.tech/project/processingtools)
@@ -92,3 +92,5 @@ GPU Info:
 [2023-7-3 19:50:9.78]: record logs
 
 ```
+
+## Others
