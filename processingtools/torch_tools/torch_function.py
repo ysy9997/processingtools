@@ -535,7 +535,7 @@ class AutoInputModel(torch.nn.Module):
     """
 
     @processingtools.functions.custom_warning_format
-    def __init__(self, model, size: typing.Union[tuple, list], mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None):
+    def __init__(self, model, size: typing.Union[tuple, list], mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None, device=None):
         """
         initialize the AutoInputModel
         :param model: model to be used
@@ -543,6 +543,7 @@ class AutoInputModel(torch.nn.Module):
         :param mean: mean for normalization
         :param std: standard deviation for normalization
         :param transformer: custom transformer for image preprocessing
+        :param device: device to run the model on
         """
 
         if transformer is None and (mean is None or std is None):
@@ -551,6 +552,7 @@ class AutoInputModel(torch.nn.Module):
         super().__init__()
 
         self.model = model
+        self.get_device(device)
 
         if transformer is not None and (mean is not None or std is not None):
             warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).')
@@ -559,6 +561,7 @@ class AutoInputModel(torch.nn.Module):
             self.transform = transformer
         else:
             self.transform = torchvision.transforms.Compose([
+                torchvision.transforms.ToPILImage(),
                 torchvision.transforms.Resize(size=size),
                 torchvision.transforms.ToTensor(),
                 torchvision.transforms.Normalize(mean, std),
@@ -572,8 +575,8 @@ class AutoInputModel(torch.nn.Module):
         """
 
         try:
-            image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)[None]
-            return self.transform(image)
+            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            return torch.unsqueeze(self.transform(image), dim=0)
         except Exception as e:
             raise ValueError(f'Error reading image from path {path}: {e}')
 
@@ -588,18 +591,15 @@ class AutoInputModel(torch.nn.Module):
         print(f'run on {processingtools.functions.s_text(f"{device}", styles=("bold",))}')
 
     @processingtools.functions.custom_warning_format
-    def forward(self, inputs: typing.Union[str, list], device=None) -> torch.Tensor:
+    def forward(self, inputs: typing.Union[str, list]) -> torch.Tensor:
         """
         forward pass of the model
         :param inputs: string or list of strings representing image paths
-        :param device: device to run the model on
         :return: model outputs
         """
 
         if self.model.training:
             warnings.warn('model is training mode now! (if you want to change eval mode, add model.eval())')
-
-        self.get_device(device)
 
         outputs = []
         if isinstance(inputs, list):
