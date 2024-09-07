@@ -9,6 +9,7 @@ import torch.nn.functional
 import typing
 import warnings
 import processingtools.functions
+import torch.utils.data
 
 
 class QueueTensor:
@@ -535,7 +536,7 @@ class AutoInputModel(torch.nn.Module):
     """
 
     @processingtools.functions.custom_warning_format
-    def __init__(self, model, size: typing.Union[tuple, list], mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None):
+    def __init__(self, model, size: typing.Union[tuple, list, None] = None, mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None):
         """
         initialize the AutoInputModel
         :param model: model to be used
@@ -564,6 +565,8 @@ class AutoInputModel(torch.nn.Module):
                 torchvision.transforms.Normalize(mean, std),
             ])
 
+        self.device = 'cpu'
+
     def image_read(self, path: str) -> torch.Tensor:
         """
         read and preprocess an image from the given path
@@ -577,39 +580,88 @@ class AutoInputModel(torch.nn.Module):
         except Exception as e:
             raise ValueError(f'Error reading image from path {path}: {e}')
 
-    def get_device(self, device=None) -> None:
+    def get_device(self) -> None:
         """
         get the device to run the model on
-        :param device: device to run the model on
         :return: device
         """
 
-        device = next(self.model.parameters()).device if device is None else device
-        print(f'run on {processingtools.functions.s_text(f"{device}", styles=("bold",))}')
+        self.device = next(self.model.parameters()).device
+        print(f'run on {processingtools.functions.s_text(f"{self.device}", styles=("bold",))}')
 
     @processingtools.functions.custom_warning_format
-    def forward(self, inputs: typing.Union[str, list], device=None) -> torch.Tensor:
+    def forward(self, inputs: typing.Union[str, list], batch_size: int = 1, num_workers: int = 0) -> typing.Union[torch.Tensor, dict]:
         """
         forward pass of the model
         :param inputs: string or list of strings representing image paths
-        :param device: device to run the model on
+        :param batch_size: batch size if input is path list
+        :param num_workers: workers num for dataloader if input is path list
         :return: model outputs
         """
 
         if self.model.training:
             warnings.warn('model is training mode now! (if you want to change eval mode, add model.eval())')
 
-        self.get_device(device)
+        self.get_device()
 
-        outputs = []
         if isinstance(inputs, list):
-            for i in inputs:
-                outputs.append(self.model(self.image_read(i)))
-            return torch.cat(outputs, dim=0)
+            outputs = []
+            out_dict = {}
+
+            dataset = AutoInputDataset(inputs, transformer=self.transform)
+            dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+            for image in processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None):
+                image, paths = image.to(self.device)
+                output = self.model(image)
+
+                outputs.append(output)
+
+                for out, path in zip(output, paths):
+                    out_dict[path] = out
+
+            print('\rInference done.')
+            out_dict['total outputs'] = torch.cat(outputs, dim=0)
+
+            return out_dict
+
         elif isinstance(inputs, str):
             return self.model(self.image_read(inputs))
         else:
             raise TypeError('inputs must be a string or a list of strings')
+
+
+class AutoInputDataset(torch.utils.data.Dataset):
+    def __init__(self, image_list: list, size: typing.Union[tuple, list, None] = None, mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None):
+        """
+        initialize the AutoInputDataset
+        :param image_list:
+        :param size: size to which images will be resized
+        :param mean: mean for normalization
+        :param std: standard deviation for normalization
+        :param transformer: custom transformer for image preprocessing
+        """
+
+        if transformer is not None and (mean is not None or std is not None):
+            warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).')
+
+        if transformer is not None:
+            self.transform = transformer
+        else:
+            self.transform = torchvision.transforms.Compose([
+                torchvision.transforms.Resize(size=size),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(mean, std),
+            ])
+
+        self.image_list = image_list
+
+    def __len__(self):
+        return len(self.image_list)
+
+    def __getitem__(self, idx):
+        path = self.image_list[idx]
+        image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)
+        return self.transform(image), path
 
 
 def gpu_env() -> None:
