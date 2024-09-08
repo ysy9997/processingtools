@@ -194,6 +194,40 @@ This provides a set of tools for handling video files, including video capture i
     - **Raises**: `ModuleNotFoundError` if `moviepy` is not installed
 
 
+### AutoInputModel
+A PyTorch module for automatically processing and normalizing input images. 
+This class wraps a given model and provides functionality to read, preprocess, and forward images through the model. 
+It supports custom transformers and normalization parameters.
+
+#### Methods
+
+1. **`__init__(self, model, size: typing.Union[tuple, list, None] = None, mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None)`**
+    - Initialization function
+    - **Parameters**:
+        - **model**: The model to be used
+        - **size**: The size to which images will be resized
+        - **mean**: Mean for normalization
+        - **std**: Standard deviation for normalization
+        - **transformer**: Custom transformer for image preprocessing (Choose one of (size, mean std) or transformer)
+
+2. **`image_read(self, path: str) -> torch.Tensor`**
+    - Read and preprocess an image from the given path
+    - **Parameters**:
+        - **path**: Image file path
+    - **Returns**: Normalized image tensor
+
+3. **`forward(self, x: torch.Tensor) -> torch.Tensor`**
+    - Forward pass through the model
+    - **Parameters**:
+        - **x**: Input tensor
+    - **Returns**: Output tensor from the model
+
+4. **`to(self, device: str)`**
+    - Move the model to the specified device
+    - **Parameters**:
+        - **device**: Device to move the model to (e.g., 'cpu', 'cuda')
+
+
 ### s_text
 
 Prints the given text with specified color (RGB) and style.
