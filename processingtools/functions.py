@@ -544,6 +544,7 @@ def s_text(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
     :param f_rgb: the RGB color code for the text color
     :param b_rgb: the RGB color code for the background color
     :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
+        (must be a tuple, multiple styles can be applied)
     :return: str
     """
 
@@ -572,7 +573,7 @@ def s_text(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
         background_rgb = [max(0, min(255, int(c))) for c in b_rgb[:3]]
         text = f'\033[48;2;{background_rgb[0]};{background_rgb[1]};{background_rgb[2]}m{text}'
 
-    return text
+    return f'{text}\033[0m'
 
 
 def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
@@ -582,10 +583,11 @@ def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', 
     :param f_rgb: the RGB color code for the text color
     :param b_rgb: the RGB color code for the background color
     :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
+        (must be a tuple, multiple styles can be applied)
     :param sep: the separator to be used in the print function
     :param end: the end character to be used in the print function
     :param file: the file where the output will be written
     :return: None
     """
 
-    print(f'{s_text(text, f_rgb, b_rgb, styles)}\033[0m', sep=sep, end=end, file=file)
+    print(f'{s_text(text, f_rgb, b_rgb, styles)}', sep=sep, end=end, file=file)
