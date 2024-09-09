@@ -560,12 +560,13 @@ class AutoInputModel(torch.nn.Module):
             self.transform = transformer
         else:
             self.transform = torchvision.transforms.Compose([
+                torchvision.transforms.ToPILImage(),
                 torchvision.transforms.Resize(size=size),
                 torchvision.transforms.ToTensor(),
                 torchvision.transforms.Normalize(mean, std),
             ])
 
-        self.device = 'cpu'
+        self.device = None
 
     def image_read(self, path: str) -> torch.Tensor:
         """
@@ -575,8 +576,8 @@ class AutoInputModel(torch.nn.Module):
         """
 
         try:
-            image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)[None]
-            return self.transform(image)
+            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            return torch.unsqueeze(self.transform(image), dim=0)
         except Exception as e:
             raise ValueError(f'Error reading image from path {path}: {e}')
 
@@ -610,8 +611,10 @@ class AutoInputModel(torch.nn.Module):
 
             dataset = AutoInputDataset(inputs, transformer=self.transform)
             dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-            for image in processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None):
-                image, paths = image.to(self.device)
+
+            for data in processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None):
+                image, paths = data
+                image = image.to(self.device)
                 output = self.model(image)
 
                 outputs.append(output)
@@ -648,6 +651,7 @@ class AutoInputDataset(torch.utils.data.Dataset):
             self.transform = transformer
         else:
             self.transform = torchvision.transforms.Compose([
+                torchvision.transforms.ToPILImage(),
                 torchvision.transforms.Resize(size=size),
                 torchvision.transforms.ToTensor(),
                 torchvision.transforms.Normalize(mean, std),
@@ -660,7 +664,7 @@ class AutoInputDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         path = self.image_list[idx]
-        image = torch.from_numpy(cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)).float().permute(2, 0, 1)
+        image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
         return self.transform(image), path
 
 
