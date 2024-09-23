@@ -591,3 +591,23 @@ def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', 
     """
 
     print(f'{s_text(text, f_rgb, b_rgb, styles)}', sep=sep, end=end, file=file)
+
+
+class TextReader:
+    def __init__(self, file_path: str, line_processor: typing.Callable[[str], str] = lambda _: _.strip()):
+        """
+        initializes the TextReader with a file path and a parsing function.
+        :param file_path: a string representing the path to the file to be read.
+        :param line_processor: a function to apply to each line of the file. the default function strips whitespace from each line.
+        """
+
+        self.file_path = file_path
+        self.line_processor = line_processor
+
+    def __iter__(self):
+        return self.line_gen()
+
+    def line_gen(self):
+        with open(self.file_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                yield self.line_processor(line)
