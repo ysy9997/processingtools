@@ -594,7 +594,7 @@ def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', 
 
 
 class TextReader:
-    def __init__(self, file_path: str, line_processor: typing.Callable[[str], str] = lambda _: _.strip()):
+    def __init__(self, file_path: str, line_processor: typing.Callable[[str], typing.Any] = lambda _: _.strip()):
         """
         initializes the TextReader with a file path and a parsing function.
         :param file_path: a string representing the path to the file to be read.
