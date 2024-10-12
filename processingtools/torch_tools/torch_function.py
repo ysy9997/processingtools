@@ -210,44 +210,54 @@ def torch_img_show(img):
     plt.show()
 
 
-def torch_img_denormalize(imgs):
+def torch_img_denormalize(image, mean: typing.Union[tuple, list, None] = None, std: typing.Union[tuple, list, None] = None):
     """
-    :param imgs: torch tensor
+    :param image: torch tensor
+    :param mean: mean for normalization
+    :param std: standard deviation for normalization
     :return: denormalized images
     """
+    if (mean is None and std is not None) or (mean is not None and std is None):
+        raise ValueError("Both mean and std must be provided together or both must be None")
 
-    for i in range(imgs.shape[0]):
-        imgs[i] = (imgs[i] - torch.min(imgs[i]))
-        imgs[i] = imgs[i] / torch.max(imgs[i]) * 255
+    if mean is not None and std is not None:
+        for i in range(image.shape[0]):
+            image = (image * std + mean) * 255
+    else:
+        for i in range(image.shape[0]):
+            image[i] = (image[i] - torch.min(image[i]))
+            image[i] = image[i] / torch.max(image[i]) * 255
 
-    return imgs
+    return image
 
 
-def torch_imgs_save(imgs, save_path: str = './'):
+def torch_imgs_save(image, save_path: str = './', mean: typing.Union[tuple, list, None] = None, std: typing.Union[tuple, list, None] = None):
     """
     Save images in png files
-    :param imgs: torch tensor
+    :param image: torch tensor
     :param save_path: save path
+    :param mean: mean for normalization
+    :param std: standard deviation for normalization
     :return: True if normal, otherwise False
     """
 
-    if type(imgs) != torch.Tensor:
+    if type(image) != torch.Tensor:
         print('\033[31mInput must be torch tensor images (Tensor shape must be (?, 3, ?, ?))\033[0m')
         return False
 
-    imgs = torch.unsqueeze(torch.unsqueeze(imgs, dim=0), dim=0) if len(imgs.shape) == 2 else imgs
-    imgs = torch.unsqueeze(imgs, dim=0) if len(imgs.shape) == 3 else imgs
+    image = torch.unsqueeze(torch.unsqueeze(image, dim=0), dim=0) if len(image.shape) == 2 else image
+    image = torch.unsqueeze(image, dim=0) if len(image.shape) == 3 else image
 
-    if imgs.shape[1] != 3 and imgs.shape[1] != 1:
+    if image.shape[1] != 3 and image.shape[1] != 1:
         print('\033[31mInput must be torch tensor images (Tensor shape must be (?, 3, ?, ?) if color scale or (?, 1, ?, ?) if gray scale)\033[0m')
         return False
 
-    imgs = imgs.clone()
-    imgs = torch_img_denormalize(imgs)
-    zeros = int(np.log10(imgs.shape[0])) + 1
+    image = image.clone()
+    image = torch_img_denormalize(image, mean, std)
+    zeros = int(np.log10(image.shape[0])) + 1
 
-    for i in range(imgs.shape[0]):
-        img = imgs[i].cpu().detach().clone()
+    for i in range(image.shape[0]):
+        img = image[i].cpu().detach().clone()
         cv2.imwrite(f'{save_path}{i:0{zeros}}.png', np.array(img.permute(1, 2, 0)).astype(int)[:, :, ::-1])
 
     return True

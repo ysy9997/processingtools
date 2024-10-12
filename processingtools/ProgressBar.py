@@ -54,14 +54,15 @@ class ProgressBar:
 
     def print_info(self, bar, space, progress_per_str, left, out, end=False):
         if self.detail_func and not end:
-            print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
+            print(f'\r\033[K\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
                   f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |'
-                  f' {self.detail_func(out)} |', end='')
+                  f' {self.detail_func(out)} |', end='', flush=True)
         else:
-            print(f'\r\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
-                  f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |', end='')
+            print(f'\r\033[K\033[2K|{bar}{space}| \033[38;5;208m{progress_per_str}%\033[0m |'
+                  f' \033[38;5;177m{self.index}/{self.length}\033[0m | \033[38;5;43m{left}\033[0m\033[0m |', end='',
+                  flush=True)
         if end:
-            print('\r', end='\r')
+            print('\r\033[K', end='\r', flush=True)
 
     def __next__(self):
         """
