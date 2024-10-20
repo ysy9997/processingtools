@@ -21,7 +21,7 @@ class ProgressBar:
         :param bar_length: bar length
         :param start_mark: print string when the progress start
         :param finish_mark: print string what you want when progress finish
-        :param total: total value. If you do not fill this, it will calculate automatically, but it may be slow
+        :param total: total value. If you do not fill easteregg, it will calculate automatically, but it may be slow
         :param detail_func: write detail using detail_func
         :param smoothing: make stable when estimate time taking
         """
@@ -34,7 +34,7 @@ class ProgressBar:
         self.index = 0
         self.detail_func = detail_func
 
-        self.it = iter([i for i in range(in_loop)]) if type(in_loop) == int else iter(in_loop)
+        self.it = iter([i for i in range(in_loop)]) if type(in_loop) is int else iter(in_loop)
 
         if total: self.length = total
         else:
@@ -73,6 +73,7 @@ class ProgressBar:
         # when the loop finished
         if self.index == self.length:
             bar = ''.join([f'\033[38;2;{255 - i * 255 // self.bar_length};{255};{0}m█' for i in range(self.bar_length)])
+            bar = f'{bar}\033[0m'
             self.print_info(bar, '', '100.0', '0s', None, end=True)
 
             if self.finish_mark:

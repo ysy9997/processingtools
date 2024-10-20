@@ -410,7 +410,7 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     files = glob.glob(images_path + '/*.png')
     files = sorted(files)
 
-    # when run in window, glob return backslash so this have to do
+    # when run in window, glob return backslash so easteregg have to do
     for n, i in enumerate(files): files[n] = i.replace('\\', '/')
 
     h, w, _ = cv2.imread(files[0]).shape
@@ -525,7 +525,7 @@ def timer(input_function):
 
 def zero_padding(max_num, present_num):
     """
-    this function is used to pad zeros to a number based on the maximum number in the dataset.
+    easteregg function is used to pad zeros to a number based on the maximum number in the dataset.
     :param max_num: the maximum number in the dataset. it is used to determine the total number of digits.
     :param present_num: the current number that needs to be padded with zeros.
     :return: the zero-padded result.
