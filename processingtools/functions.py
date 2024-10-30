@@ -3,6 +3,9 @@ import os
 import glob
 import multiprocessing as mp
 import argparse
+
+import numpy as np
+
 import processingtools.ProgressBar
 import time
 import warnings
@@ -130,54 +133,85 @@ class MultiProcess:
 
         self.cpu_n = cpu_n
 
-    def duplicate_func(self, func, args_list: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True):
+    def duplicate_func(self, func, args_list: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True, debug: bool = False):
         """
         Run the function as multiprocess
         :param func: the function for running multiprocess
         :param args_list: arguments for function
         :param progress_args: arguments for ProgressBar. if False, it doesn't use progressbar, if True it uses progressbar.
+        :param debug: if True, runs the function in single process mode for debugging
         :return: True
         """
 
         if type(progress_args) is not dict and type(progress_args) is not bool:
             raise TypeError('type of progress_args is needed dict or bool')
 
-        with mp.Pool(processes=self.cpu_n) as pool:
-            results = [pool.apply_async(func, args) for args in args_list]
+        if debug:
+            # Single process mode for debugging
+            results = [func(*args) for args in args_list]
             if progress_args is True:
                 for result in processingtools.ProgressBar(results):
-                    result.get()
+                    pass
             elif progress_args:
                 for result in processingtools.ProgressBar(results, **progress_args):
-                    result.get()
+                    pass
             else:
                 for result in results:
-                    result.get()
+                    pass
+
+        else:
+            # Multi-process mode
+            with mp.Pool(processes=self.cpu_n) as pool:
+                results = [pool.apply_async(func, args) for args in args_list]
+                if progress_args is True:
+                    for result in processingtools.ProgressBar(results):
+                        result.get()
+                elif progress_args:
+                    for result in processingtools.ProgressBar(results, **progress_args):
+                        result.get()
+                else:
+                    for result in results:
+                        result.get()
         return True
 
-    def multi_func(self, funcs: typing.Union[tuple, list], args: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True):
+    def multi_func(self, funcs: typing.Union[tuple, list], args: typing.Union[tuple, list], progress_args: typing.Union[dict, bool] = True, debug: bool = False):
         """
         Run the function as multiprocess
         :param funcs: the functions for running multiprocess
         :param args: arguments for function
         :param progress_args: arguments for ProgressBar. if False, it doesn't use progressbar, if True it uses progressbar.
+        :param debug: if True, runs the functions in single process mode for debugging
         :return: True
         """
 
         if type(progress_args) is not dict and type(progress_args) is not bool:
             raise TypeError('type of progress_args is needed dict or bool')
 
-        with mp.Pool(processes=self.cpu_n) as pool:
-            results = [pool.apply_async(func, args) for func, args in zip(funcs, args)]
+        if debug:
+            # Single process mode for debugging
+            results = [func(*arg) for func, arg in zip(funcs, args)]
             if progress_args is True:
                 for result in processingtools.ProgressBar(results):
-                    result.get()
+                    pass
             elif progress_args:
                 for result in processingtools.ProgressBar(results, **progress_args):
-                    result.get()
+                    pass
             else:
                 for result in results:
-                    result.get()
+                    pass
+
+        else:
+            with mp.Pool(processes=self.cpu_n) as pool:
+                results = [pool.apply_async(func, args) for func, args in zip(funcs, args)]
+                if progress_args is True:
+                    for result in processingtools.ProgressBar(results):
+                        result.get()
+                elif progress_args:
+                    for result in processingtools.ProgressBar(results, **progress_args):
+                        result.get()
+                else:
+                    for result in results:
+                        result.get()
         return True
 
     def split_list(self, *args):
@@ -611,3 +645,17 @@ class TextReader:
         with open(self.file_path, 'r', encoding='utf-8') as file:
             for line in file:
                 yield self.line_processor(line)
+
+
+def save_images(images_path: list, images: typing.List[np.ndarray]) -> None:
+    """
+    Processes and writes images to the specified paths using multiprocessing.
+    :param images_path: List of paths where images will be saved
+    :param images: Numpy array of images to be saved
+    :return: None
+    """
+
+    multi_processor = MultiProcess()
+
+    args = [[image_path, image] for image_path, image in zip(images_path, images)]
+    multi_processor.duplicate_func(cv2.imwrite, args, progress_args={'finish_mark': 'image write done.'})
