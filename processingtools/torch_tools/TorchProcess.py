@@ -40,7 +40,7 @@ class Trainer(torch.nn.Module):
             loss = None
             loss_sum = 0
 
-            for inputs, targets in processingtools.PrgressBar.ProgressBar(self.train_loader, total=len(self.train_loader), detail_func=lambda _: f'loss: {loss:0.3f}' if loss is not None else '...', finish_mark=None):
+            for inputs, targets in processingtools.ProgressBar(self.train_loader, total=len(self.train_loader), detail_func=lambda _: f'loss: {loss:0.3f}' if loss is not None else '...', finish_mark=None):
                 inputs, targets = inputs.to(next(self.model.parameters()).device), targets.to(next(self.model.parameters()).device)
 
                 self.optimizer.zero_grad()
@@ -111,7 +111,7 @@ class Evaluator(torch.nn.Module):
         correct = 0
         data_size = 0
 
-        for inputs, targets in processingtools.PrgressBar.ProgressBar(self.test_loader, total=len(self.test_loader), finish_mark=None, detail_func=lambda _: f'acc: {correct / data_size: 0.3f} %' if data_size != 0 else 'acc: 0 %'):
+        for inputs, targets in processingtools.ProgressBar(self.test_loader, total=len(self.test_loader), finish_mark=None, detail_func=lambda _: f'acc: {correct / data_size: 0.3f} %' if data_size != 0 else 'acc: 0 %'):
             inputs, targets = inputs.to(next(self.model.parameters()).device), targets.to(next(self.model.parameters()).device)
             data_size = data_size + targets.shape[0]
 
