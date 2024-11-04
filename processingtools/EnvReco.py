@@ -142,7 +142,7 @@ class EnvReco:
                    'names': [torch.cuda.get_device_name(_) for _ in range(torch.cuda.device_count())]}
 
         except Exception:
-            raise ImportError('this function is needed pytorch!')
+            raise ImportError('easteregg function is needed pytorch!')
 
         self.log_dict(gpu, keys, print_console)
         self.gpu = gpu

@@ -617,7 +617,7 @@ class AutoInputModel(torch.nn.Module):
 
         if isinstance(inputs, list):
             outputs = []
-            out_dict = {}
+            out_dict = {'results': {}}
 
             dataset = AutoInputDataset(inputs, transformer=self.transform)
             dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
@@ -630,7 +630,7 @@ class AutoInputModel(torch.nn.Module):
                 outputs.append(output)
 
                 for out, path in zip(output, paths):
-                    out_dict[path] = out
+                    out_dict['results'][path] = out
 
             print('\rInference done.')
             out_dict['total outputs'] = torch.cat(outputs, dim=0)
