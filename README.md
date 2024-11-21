@@ -228,6 +228,25 @@ It supports custom transformers and normalization parameters.
         - **device**: Device to move the model to (e.g., 'cpu', 'cuda')
 
 
+### EnsembleModel
+A PyTorch module for performing ensemble predictions using multiple models. This class provides functionality to ensemble model predictions using different methods such as mean and weighted average.
+
+#### Methods
+
+1. **`__init__(self, models)`**
+    - Initialization function
+    - **Parameters**:
+        - **models**: List of models to be ensembled
+
+2. **`forward(self, x: torch.Tensor, option: str = 'mean', weights: typing.Union[list, tuple, None] = None) -> torch.Tensor`**
+    - Perform ensemble predictions on the input data
+    - **Parameters**:
+        - **x**: Input tensor
+        - **option**: Ensemble method ('mean' or 'WA' for weighted average)
+        - **weights**: Weights for weighted average (must be the same length as models if specified)
+    - **Returns**: Ensemble prediction tensor
+
+
 ### s_text
 
 Prints the given text with specified color (RGB) and style.

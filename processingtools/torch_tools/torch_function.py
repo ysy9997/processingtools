@@ -691,3 +691,54 @@ def gpu_env() -> None:
 
     for i in range(num_gpus):
         print(f'    • GPU {i}: {torch.cuda.get_device_name(i)}')
+
+
+class EnsembleModel(torch.nn.Module):
+    def __init__(self, models):
+        """
+        Initialize the EnsembleModel.
+        :param models: List of models to be ensembled.
+        """
+
+        super().__init__()
+        self.models = models
+
+    def forward(self, x, option: str = 'mean', weights: typing.Union[list, tuple, None] = None) -> torch.Tensor:
+        """
+        Perform ensemble predictions on the input data.
+        :param x: Input data.
+        :param option: Ensemble method ('mean' or 'WA' for weighted average).
+        :param weights: Weights for weighted average. Must be the same length as models if specified.
+        :return: Ensemble prediction.
+        """
+
+        # Check if the option is valid
+        if option not in ['mean', 'WA']:
+            raise ValueError("Option must be either 'mean' or 'WA'.")
+
+        # Initialize a list to store predictions from each model
+        predictions = []
+
+        # Perform prediction for each model
+        for model in self.models:
+            predictions.append(model(x))
+
+        if option == 'mean':
+            # Calculate the mean of the predictions
+            ensemble_predictions = torch.mean(torch.stack(predictions), dim=0)
+
+        elif option == 'WA':
+            # Ensure weights are provided and valid
+            if weights is None or len(weights) != len(self.models):
+                raise ValueError("Weights must be provided and match the number of models for weighted averaging.")
+
+            # Convert weights to a tensor and normalize them
+            weights = torch.tensor(weights, dtype=torch.float32)
+            weights = weights / weights.sum()  # Normalize weights so they sum to 1
+
+            weighted_predictions = torch.stack(predictions) * weights[:, None, None, None]
+            ensemble_predictions = torch.sum(weighted_predictions, dim=0)
+        else:
+            ensemble_predictions = None
+
+        return ensemble_predictions
