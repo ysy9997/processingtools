@@ -66,13 +66,13 @@ class VideoTools:
         if type(size) is float or type(size) is int:
             size = [round(self.height * size), round(self.width * size)]
 
-        create_folder(save_path)
+        create_folder(save_path, print_warning=False)
 
         for n, i in processingtools.ProgressBar(enumerate(range(self.length)), total=self.length, finish_mark=None):
             ret, frame = self.cap.read()
             if start <= n and ret and n % jump == 0:
                 frame = frame if size is None else cv2.resize(frame, (size[1], size[0]))
-                cv2.imwrite(f'{save_path}/{self.video_name}_{zero_padding(self.length, i)}.{extension}', frame)
+                imwrite(f'{save_path}/{self.video_name}_{zero_padding(self.length, i)}.{extension}', frame)
 
             if n > end:
                 print('\r', end='\r')
@@ -509,7 +509,7 @@ def resize_images(dir_path: str, save_path: str, size, interpolation=None, img_f
         img = cv2.imread(i)
         img = cv2.resize(img, size, interpolation=interpolation)
         name = os.path.basename(i)
-        cv2.imwrite(f'{save_path}/{name}', img)
+        imwrite(f'{save_path}/{name}', img)
 
     return True
 
@@ -658,4 +658,24 @@ def save_images(images_path: list, images: typing.List[np.ndarray]) -> None:
     multi_processor = MultiProcess()
 
     args = [[image_path, image] for image_path, image in zip(images_path, images)]
-    multi_processor.duplicate_func(cv2.imwrite, args, progress_args={'finish_mark': 'image write done.'})
+    multi_processor.duplicate_func(imwrite, args, progress_args={'finish_mark': 'image write done.'})
+
+
+def imwrite(file_path: str, image: np.ndarray) -> bool:
+    """
+    Writes an image to the specified file path, including paths with Hangul characters.
+    Supported file formats are those supported by OpenCV, such as .jpg, .png, etc.
+    :param file_path: The path where the image will be saved
+    :param image: Numpy array representing the image to be saved
+    :return: True if the image was saved successfully, False otherwise
+    """
+    try:
+        result, buffer = cv2.imencode(os.path.splitext(file_path)[1], image)
+        if not result:
+            print(f"Error encoding the image for file '{file_path}'")
+            return False
+        buffer.tofile(file_path)
+        return True
+    except Exception as e:
+        print(f"Error saving file '{file_path}': {e}")
+        return False
