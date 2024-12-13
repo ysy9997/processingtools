@@ -661,6 +661,7 @@ def save_images(images_path: list, images: typing.List[np.ndarray]) -> None:
     multi_processor.duplicate_func(imwrite, args, progress_args={'finish_mark': 'image write done.'})
 
 
+@custom_warning_format
 def imwrite(file_path: str, image: np.ndarray) -> bool:
     """
     Writes an image to the specified file path, including paths with Hangul characters.
@@ -669,13 +670,39 @@ def imwrite(file_path: str, image: np.ndarray) -> bool:
     :param image: Numpy array representing the image to be saved
     :return: True if the image was saved successfully, False otherwise
     """
+
     try:
+        file_path = os.path.abspath(file_path)
         result, buffer = cv2.imencode(os.path.splitext(file_path)[1], image)
+
         if not result:
-            print(f"Error encoding the image for file '{file_path}'")
+            warnings.warn(f"Error encoding the image for file '{file_path}'")
             return False
         buffer.tofile(file_path)
         return True
+
     except Exception as e:
-        print(f"Error saving file '{file_path}': {e}")
+        warnings.warn(f"Error saving file '{file_path}': {e}")
         return False
+
+
+def imread(file_path: str) -> typing.Optional[np.ndarray]:
+    """
+    Reads an image from the specified file path, including paths with Hangul characters.
+    Supported file formats are those supported by OpenCV, such as .jpg, .png, etc.
+    :param file_path: The path of the image file to be read
+    :return: Numpy array representing the image if read successfully, None otherwise
+    """
+
+    try:
+        file_path = os.path.abspath(file_path)
+        buffer = np.fromfile(file_path, dtype=np.uint8)
+        image = cv2.imdecode(buffer, cv2.IMREAD_UNCHANGED)
+
+        if image is None:
+            print(f"Error decoding the image from file '{file_path}'")
+            return None
+        return image
+
+    except Exception as e:
+        raise e
