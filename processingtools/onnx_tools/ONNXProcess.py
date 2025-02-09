@@ -34,10 +34,17 @@ class ONNXInferenceModel:
             return self.ort_session.run(None, {self.ort_input_name: self.normalize_image(inputs)})
 
         elif type(inputs) is list:
-            normalize_inputs = []
+            out_dict = {'results': {}}
+            outputs = []
+
             for _input in inputs:
-                normalize_inputs.append(self.normalize_image(_input))
-            return self.ort_session.run(None, {self.ort_input_name: np.concatenate(normalize_inputs, axis=0)})
+                out = self.normalize_image(_input)[0]
+                outputs.append(out)
+                out_dict['results'][_input] = out[0]
+
+            out_dict['total outputs'] = np.concatenate(outputs, axis=0)
+
+            return out_dict
 
         else:  # if type of inputs torch.Tensor
             return self.ort_session.run(None, {self.ort_input_name: self.to_numpy(inputs)})
