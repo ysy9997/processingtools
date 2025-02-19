@@ -601,6 +601,7 @@ class AutoInputModel(torch.nn.Module):
         print(f'run on {processingtools.functions.s_text(f"{self.device}", styles=("bold",))}')
 
     @processingtools.functions.custom_warning_format
+    @torch.no_grad()
     def forward(self, inputs: typing.Union[str, list], batch_size: int = 1, num_workers: int = 0) -> typing.Union[torch.Tensor, dict]:
         """
         forward pass of the model
