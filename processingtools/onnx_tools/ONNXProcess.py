@@ -29,20 +29,29 @@ class ONNXInferenceModel:
         self.mean = mean
         self.std = std
 
-    def __call__(self, inputs: typing.Union['torch.Tensor', str, list]):
-        if type(inputs) is str:
+    def __call__(self, inputs: typing.Union['torch.Tensor', str, list], batch_size: int = 1):
+        """
+        Process inputs using ONNX model
+        :param inputs: list of image paths, or single image path, or torch.Tensor
+        :param batch_size: size of the batch for processing inputs
+        """
+
+        if isinstance(inputs, str):
             return self.ort_session.run(None, {self.ort_input_name: self.normalize_image(inputs)})
 
-        elif type(inputs) is list:
-            out_dict = {'results': {}}
-            outputs = []
+        if isinstance(inputs, list):
+            # Normalize inputs
+            normalize_inputs = [self.normalize_image(_input) for _input in inputs]
 
-            for _input in inputs:
-                out = self.normalize_image(_input)[0]
-                outputs.append(out)
-                out_dict['results'][_input] = out[0]
+            # Process in batches
+            batch_results = [
+                self.ort_session.run(None, {self.ort_input_name: np.concatenate(normalize_inputs[i:i + batch_size], axis=0)})
+                for i in range(0, len(normalize_inputs), batch_size)
+            ]
 
-            out_dict['total outputs'] = np.concatenate(outputs, axis=0)
+            # Combine results and organize output
+            total_outputs = np.concatenate(batch_results, axis=0)
+            out_dict = {'results': {path: out for out, path in zip(total_outputs, inputs)}, 'total outputs': total_outputs}
 
             return out_dict
 
@@ -55,6 +64,7 @@ class ONNXInferenceModel:
         :param image_path: input image path
         :return: normalized image
         """
+
         try:
             image = cv2.imread(image_path)
             if self.size is not None:
