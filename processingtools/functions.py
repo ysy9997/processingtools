@@ -706,3 +706,34 @@ def imread(file_path: str) -> typing.Optional[np.ndarray]:
 
     except Exception as e:
         raise e
+
+
+def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> list:
+    """
+    Splits a list into sublist based on the given parameters.
+    :param lst: List to be split.
+    :param chunk_size: Number of elements in each sublist. Must be positive if provided.
+    :param num_chunks: Number of sublist. Must be positive if provided.
+    :return: A list of sublist.
+    :raises ValueError: If both chunk_size and num_chunks are provided or both are not provided.
+    """
+
+    if (chunk_size is None and num_chunks is None) or (chunk_size is not None and num_chunks is not None):
+        raise ValueError("One and only one of chunk_size or num_chunks must be provided and positive.")
+
+    if chunk_size is not None:
+        return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+    elif num_chunks is not None:
+        part_size = len(lst) // num_chunks
+        remainder = len(lst) % num_chunks
+
+        result = []
+        start = 0
+
+        for i in range(num_chunks):
+            end = start + part_size + (1 if i < remainder else 0)
+            result.append(lst[start:end])
+            start = end
+
+        return result
