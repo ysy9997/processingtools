@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
 import copy
 import torch
 import torchvision.transforms
 import torchvision.transforms.functional
 import torch.nn.functional
 import typing
+import processingtools.functions
 
 
 class QueueTensor:
@@ -141,7 +141,7 @@ class GradCam:
         """
 
         grad_cam = self.grad_cam(image, ground_truth, module_name)
-        cv2.imwrite(f'{save_path}/cam_{name}.png', (image[:, :, ::-1] / 2 + grad_cam / 2))
+        processingtools.functions.imwrite(f'{save_path}/cam_{name}.png', (image[:, :, ::-1] / 2 + grad_cam / 2))
 
         if free_list:
             self.free_list()
@@ -255,7 +255,7 @@ def torch_imgs_save(image, save_path: str = './', mean: typing.Union[tuple, list
 
     for i in range(image.shape[0]):
         img = image[i].cpu().detach().clone()
-        cv2.imwrite(f'{save_path}{i:0{zeros}}.png', np.array(img.permute(1, 2, 0)).astype(int)[:, :, ::-1])
+        processingtools.functions.imwrite(f'{save_path}{i:0{zeros}}.png', np.array(img.permute(1, 2, 0)).astype(int)[:, :, ::-1])
 
     return True
 
