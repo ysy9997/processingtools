@@ -225,44 +225,88 @@ class AutoInputModel(torch.nn.Module):
     @torch.no_grad()
     def forward(self, inputs: typing.Union[str, list], batch_size: int = 1, num_workers: int = 0) -> typing.Union[torch.Tensor, dict]:
         """
-        forward pass of the model
-        :param inputs: string or list of strings representing image paths
-        :param batch_size: batch size if input is path list
-        :param num_workers: workers num for dataloader if input is path list
-        :return: model outputs
+        forward pass of the model.
+        :param inputs: string or list of strings representing image paths.
+        :param batch_size: batch size if input is a path list.
+        :param num_workers: number of workers for DataLoader if input is a path list.
+        :return: model outputs.
         """
 
         if self.model.training:
-            warnings.warn('model is training mode now! (if you want to change eval mode, add model.eval())')
+            warnings.warn('Model is in training mode! (If you want to change to eval mode, use model.eval())')
 
         self.get_device()
 
         if isinstance(inputs, list):
-            outputs = []
-            out_dict = {'results': {}}
+            return self._process_batch(inputs, batch_size, num_workers)
 
-            dataset = AutoInputDataset(inputs, transformer=self.transform)
-            dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+        if isinstance(inputs, str):
+            return self.model(self.image_read(inputs))
 
-            for data in processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None):
-                image, paths = data
-                image = image.to(self.device)
-                output = self.model(image)
+        raise TypeError('Inputs must be a string or a list of strings')
 
-                outputs.append(output)
+    def _process_batch(self, inputs: list, batch_size: int, num_workers: int) -> typing.Dict[str, typing.Union[typing.Dict, typing.Tuple[torch.Tensor, ...], torch.Tensor]]:
+        """
+        process batch inputs.
+        :param inputs: list of image paths.
+        :param batch_size: batch size for DataLoader.
+        :param num_workers: number of workers for DataLoader.
+        :return: a dictionary of model outputs.
+        """
 
-                for out, path in zip(output, paths):
-                    out_dict['results'][path] = out
+        outputs = []
+        out_dict: typing.Dict[str, typing.Union[typing.Dict, typing.Tuple[torch.Tensor, ...], torch.Tensor]] = {'results': {}}
 
-            print('\rInference done.')
+        # Initialize dataset and dataloader
+        dataset = AutoInputDataset(inputs, transformer=self.transform)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+
+        for data in processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None):
+            image, paths = data
+            image = image.to(self.device)
+            output = self.model(image)
+            outputs.append(output)
+
+            self._store_results(out_dict, output, paths)
+
+        print('\rInference done.')
+
+        # Combine outputs into 'total outputs'
+        if isinstance(outputs[0], (tuple, list)):
+            out_dict['total outputs'] = self._combine_tuple_outputs(outputs)
+        else:
             out_dict['total outputs'] = torch.cat(outputs, dim=0)
 
-            return out_dict
+        return out_dict
 
-        elif isinstance(inputs, str):
-            return self.model(self.image_read(inputs))
+    @staticmethod
+    def _store_results(out_dict: dict, output: typing.Union[tuple, list, torch.Tensor], paths: list) -> None:
+        """
+        store model outputs in the results dictionary.
+        :param out_dict: dictionary to store results.
+        :param output: model output for the current batch.
+        :param paths: corresponding paths for the batch.
+        """
+
+        if isinstance(output, (tuple, list)):
+            for out, path in zip(zip(*output), paths):
+                out_dict['results'][path] = out
         else:
-            raise TypeError('inputs must be a string or a list of strings')
+            for out, path in zip(output, paths):
+                out_dict['results'][path] = out
+
+    @staticmethod
+    def _combine_tuple_outputs(outputs: list) -> typing.Tuple[torch.Tensor, ...]:
+        """
+        combine outputs when the model returns tuples or lists.
+        :param outputs: list of model outputs.
+        :return: combined tuple of outputs.
+        """
+
+        total_output = []
+        for _ in zip(*outputs):
+            total_output.append(torch.cat(_, dim=0))
+        return tuple(total_output)
 
 
 class AutoInputDataset(torch.utils.data.Dataset):
