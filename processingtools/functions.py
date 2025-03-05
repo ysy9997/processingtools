@@ -377,10 +377,10 @@ def read_images(dir_path: str, img_format: str = None):
     if img_format is None:
         images_png = glob.glob(f'{dir_path}/*.png')
         images_jpg = glob.glob(f'{dir_path}/*.jpg')
-        return [cv2.imread(_) for _ in sorted(images_png + images_jpg)]
+        return [imread(_) for _ in sorted(images_png + images_jpg)]
 
     else:
-        return [cv2.imread(_) for _ in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
+        return [imread(_) for _ in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
 
 
 @custom_warning_format
@@ -447,11 +447,11 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     # when run in window, glob return backslash so easteregg have to do
     for n, i in enumerate(files): files[n] = i.replace('\\', '/')
 
-    h, w, _ = cv2.imread(files[0]).shape
+    h, w, _ = imread(files[0]).shape
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
 
     for i in processingtools.ProgressBar(files):
-        out.write(cv2.imread(i))
+        out.write(imread(i))
 
     out.release()
     return True
@@ -506,7 +506,7 @@ def resize_images(dir_path: str, save_path: str, size, interpolation=None, img_f
     images = read_images_list(dir_path, img_format)
 
     for i in images:
-        img = cv2.imread(i)
+        img = imread(i)
         img = cv2.resize(img, size, interpolation=interpolation)
         name = os.path.basename(i)
         imwrite(f'{save_path}/{name}', img)

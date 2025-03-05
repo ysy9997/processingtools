@@ -207,7 +207,7 @@ class AutoInputModel(torch.nn.Module):
         """
 
         try:
-            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            image = cv2.cvtColor(processingtools.functions.imread(path), cv2.COLOR_BGR2RGB)
             return torch.unsqueeze(self.transform(image), dim=0)
         except Exception as e:
             raise ValueError(f'Error reading image from path {path}: {e}')
@@ -340,5 +340,5 @@ class AutoInputDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         path = self.image_list[idx]
-        image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(processingtools.functions.imread(path), cv2.COLOR_BGR2RGB)
         return self.transform(image), path

@@ -3,6 +3,7 @@ import typing
 import cv2
 import numpy as np
 import os
+import processingtools.functions
 
 if typing.TYPE_CHECKING:
     import torch
@@ -66,7 +67,7 @@ class ONNXInferenceModel:
         """
 
         try:
-            image = cv2.imread(image_path)
+            image = processingtools.functions.imread(image_path)
             if self.size is not None:
                 image = cv2.resize(image, self.size)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
