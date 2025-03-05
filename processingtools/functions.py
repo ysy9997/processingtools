@@ -3,9 +3,7 @@ import os
 import glob
 import multiprocessing as mp
 import argparse
-
 import numpy as np
-
 import processingtools.ProgressBar
 import time
 import warnings
@@ -737,3 +735,16 @@ def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> lis
             start = end
 
         return result
+
+def s_open(file, mode='r', buffering=None, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False):
+    """
+    A safer version of the built-in open function.
+    For other parameters and behavior, see the documentation of the built-in open function.
+    :param exist_ok: If False and mode is 'w', raises FileExistsError if the file already exists.
+    """
+
+    file_exists_and_write_mode = (mode == 'w' and not exist_ok and os.path.exists(file))
+    if file_exists_and_write_mode:
+        raise FileExistsError(f'The file "{file}" already exists. Set exist_ok=True to overwrite it.')
+
+    return open(file, mode, buffering, encoding, errors, newline, closefd)
