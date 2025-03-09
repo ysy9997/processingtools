@@ -736,7 +736,7 @@ def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> lis
 
         return result
 
-def s_open(file, mode='r', buffering=None, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False):
+def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False):
     """
     A safer version of the built-in open function.
     For other parameters and behavior, see the documentation of the built-in open function.
