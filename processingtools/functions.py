@@ -464,16 +464,28 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def sorted_glob(path: str, key = None):
+def sorted_glob(path: str, key=None):
     """
-    automatically sorted glob
+    Automatically sorted glob
     :param path: glob path
-    :param key: sorted key
+    :param key: sorting key
     :return: sorted glob list
     """
 
-    if key is None: return sorted(glob.glob(path))
-    else: return sorted(glob.glob(path), key=key)
+    def numeric_key(filename):
+        """Extract the numeric part of the filename for sorting."""
+        base_name = os.path.basename(filename)  # Get the file name
+        name, _ = os.path.splitext(base_name)  # Remove extension
+        try:
+            return int(name)  # Convert numeric part to integer
+        except ValueError:
+            return name  # Default to string-based sorting for non-numeric filenames
+
+    # Simplify key handling
+    if key == 'num':
+        return sorted(glob.glob(path), key=numeric_key)
+    else:
+        return sorted(glob.glob(path), key=key)
 
 
 def print_write(string: str, file):
