@@ -748,7 +748,7 @@ def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> lis
 
         return result
 
-def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False):
+def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False) -> typing.TextIO:
     """
     A safer version of the built-in open function.
     For other parameters and behavior, see the documentation of the built-in open function.
@@ -760,3 +760,21 @@ def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=Non
         raise FileExistsError(f'The file "{file}" already exists. Set exist_ok=True to overwrite it.')
 
     return open(file, mode, buffering, encoding, errors, newline, closefd)
+
+
+def webp_convert(input_path: str, output_path: str) -> bool:
+    """
+    Converts a WebP image file to a specified image format (e.g., PNG, JPG).
+    :param input_path: The file path to the input WebP image.
+    :param output_path: The base file path for the output image, excluding the file extension.
+    :return: True if the image was successfully saved to the output path. False otherwise.
+    """
+
+    with open(input_path, "rb") as file:
+        binary_data = file.read()
+
+    np_data = np.frombuffer(binary_data, dtype=np.uint8)
+    img = cv2.imdecode(np_data, cv2.IMREAD_UNCHANGED)
+    output_file = f'{output_path}'
+
+    return imwrite(output_file, img)
