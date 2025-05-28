@@ -212,45 +212,49 @@ class AutoInputModel(torch.nn.Module):
         except Exception as e:
             raise ValueError(f'Error reading image from path {path}: {e}')
 
-    def get_device(self) -> None:
+    def get_device(self, logging: bool) -> None:
         """
         get the device to run the model on
+        :param logging: whether to log the device information
         :return: device
         """
 
         self.device = next(self.model.parameters()).device
-        print(f'run on {processingtools.functions.s_text(f"{self.device}", styles=("bold",))}')
+        if logging:
+            print(f'run on {processingtools.functions.s_text(f"{self.device}", styles=("bold",))}')
 
     @processingtools.functions.custom_warning_format
     @torch.no_grad()
-    def forward(self, inputs: typing.Union[str, list], batch_size: int = 1, num_workers: int = 0) -> typing.Union[torch.Tensor, dict]:
+    def forward(self, inputs: typing.Union[str, list], batch_size: int = 1, num_workers: int = 0, logging: bool = True) -> typing.Union[torch.Tensor, dict]:
         """
         forward pass of the model.
         :param inputs: string or list of strings representing image paths.
         :param batch_size: batch size if input is a path list.
         :param num_workers: number of workers for DataLoader if input is a path list.
+        :param logging: whether to log progress.
         :return: model outputs.
         """
 
         if self.model.training:
             warnings.warn('Model is in training mode! (If you want to change to eval mode, use model.eval())')
 
-        self.get_device()
+        self.get_device(logging)
 
         if isinstance(inputs, list):
-            return self._process_batch(inputs, batch_size, num_workers)
+            return self._process_batch(inputs, batch_size, num_workers, logging)
 
         if isinstance(inputs, str):
             return self.model(self.image_read(inputs))
 
         raise TypeError('Inputs must be a string or a list of strings')
 
-    def _process_batch(self, inputs: list, batch_size: int, num_workers: int) -> typing.Dict[str, typing.Union[typing.Dict, typing.Tuple[torch.Tensor, ...], torch.Tensor]]:
+    def _process_batch(self, inputs: list, batch_size: int, num_workers: int, logging: bool = True) -> typing.Dict[str, typing.Union[typing.Dict, typing.Tuple[torch.Tensor, ...], torch.Tensor]]:
         """
         process batch inputs.
         :param inputs: list of image paths.
         :param batch_size: batch size for DataLoader.
         :param num_workers: number of workers for DataLoader.
+        :param logging: whether to log progress.
         :return: a dictionary of model outputs.
         """
 
@@ -261,7 +265,8 @@ class AutoInputModel(torch.nn.Module):
         dataset = AutoInputDataset(inputs, transformer=self.transform)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
-        for data in processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None):
+        interator = processingtools.ProgressBar(dataloader, total=len(dataloader), finish_mark=None) if logging else dataloader
+        for data in interator:
             image, paths = data
             image = image.to(self.device)
             output = self.model(image)
@@ -269,7 +274,8 @@ class AutoInputModel(torch.nn.Module):
 
             self._store_results(out_dict, output, paths)
 
-        print('\rInference done.')
+        if logging:
+            print('\rInference done.')
 
         # Combine outputs into 'total outputs'
         if isinstance(outputs[0], (tuple, list)):
