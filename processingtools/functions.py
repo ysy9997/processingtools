@@ -748,6 +748,9 @@ def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> lis
 
         return result
 
+    raise RuntimeError(f'Internal logic error in {chunk_list.__name__}: Unexpected branch reached.')
+
+
 def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False) -> typing.TextIO:
     """
     A safer version of the built-in open function.
@@ -778,3 +781,20 @@ def webp_convert(input_path: str, output_path: str) -> bool:
     output_file = f'{output_path}'
 
     return imwrite(output_file, img)
+
+
+def dict_stat(data: dict, length: int = 40) -> None:
+    """
+    prints a bar chart representation of the dictionary data.
+    :param data: dictionary where keys are labels and values are numerical data.
+    :param length: the maximum length of the bar in characters (default is 40).
+    :return: None
+    """
+
+    max_key_len = max(len(str(k)) for k in data)
+    max_val = max(data.values())
+    scale = length / max_val if max_val > 0 else 1
+
+    for k, v in data.items():
+        bar = '#' * int(v * scale)
+        print(f"{str(k).ljust(max_key_len)} | {bar} ({v})")
