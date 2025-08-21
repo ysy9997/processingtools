@@ -6,6 +6,7 @@ import torchvision
 import cv2
 import typing
 import warnings
+import os
 
 
 class Trainer(torch.nn.Module):
@@ -128,6 +129,162 @@ class Evaluator(torch.nn.Module):
 
         self.model.train()
         return correct
+
+
+class DDPTrainer:
+    """
+    Basic trainer for distributed data parallel (DDP) training.
+    """
+
+    def __init__(self, model, train_loader, test_loader, optimizer, train_func, epoch, save_path,
+                 recoder=None, validation_loader=None, valid_func=None, scheduler=None, save_interval: int = 5,
+                 valid_interval: int = 1, start_epoch: int = 0, model_compile: bool = True, best_metrics: float = 0):
+        super().__init__()
+
+        self.model = torch.compile(model) if model_compile else model
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+        self.validation_loader = validation_loader if validation_loader is not None else test_loader
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        self.train_func = train_func
+
+        self.epoch = epoch
+        self.save_path = save_path
+        self.save_interval = save_interval
+        self.valid_interval = valid_interval
+        self.start_epoch = start_epoch
+        self.recoder = recoder
+
+        self.valid_func = valid_func
+        self.best_metrics = best_metrics
+
+        self.check_shuffle_conflict()
+
+    @staticmethod
+    def setup(rank, world_size):
+        os.environ['MASTER_ADDR'] = 'localhost'
+        os.environ['MASTER_PORT'] = '12355'
+        torch.distributed.init_process_group("nccl", rank=rank, world_size=world_size)
+
+    @staticmethod
+    def cleanup():
+        torch.distributed.destroy_process_group()
+
+    def check_shuffle_conflict(self):
+        """Raise warning or error if train_loader has shuffle=True while using DistributedSampler."""
+        if hasattr(self.train_loader, 'shuffle') and self.train_loader.shuffle:
+            raise ValueError("train_loader has shuffle=True. You must disable shuffle when using DistributedSampler.")
+        elif getattr(self.train_loader, 'sampler', None) is None and getattr(self.train_loader, 'shuffle', False):
+            warnings.warn(
+                "train_loader has shuffle=True but no sampler is set. "
+                "This may cause issues with DistributedSampler. "
+                "Consider using DistributedSampler with shuffle=False."
+            )
+
+    def train(self, rank: int, world_size: int):
+        self.setup(rank, world_size)
+        torch.cuda.set_device(rank)
+        device = torch.device(f"cuda:{rank}")
+
+        self.model.to(device)
+        model = torch.nn.parallel.DistributedDataParallel(
+            self.model,
+            device_ids=[rank],
+            output_device=rank,
+            find_unused_parameters=True
+        )
+
+        # Train DataLoader with DistributedSampler
+        train_sampler = torch.utils.data.distributed.DistributedSampler(
+            self.train_loader.dataset, num_replicas=world_size, rank=rank, shuffle=True
+        )
+        train_loader = torch.utils.data.DataLoader(
+            self.train_loader.dataset,
+            batch_size=self.train_loader.batch_size,
+            sampler=train_sampler,
+            num_workers=self.train_loader.num_workers,
+            pin_memory=True,
+            shuffle=False  # Must be False when sampler is used
+        )
+
+        # Validation DataLoader and sampler
+        valid_loader = None
+        valid_sampler = None
+        if self.valid_func:
+            valid_sampler = torch.utils.data.distributed.DistributedSampler(
+                self.validation_loader.dataset, num_replicas=world_size, rank=rank, shuffle=False
+            )
+            valid_loader = torch.utils.data.DataLoader(
+                self.validation_loader.dataset,
+                batch_size=self.validation_loader.batch_size,
+                sampler=valid_sampler,
+                num_workers=self.validation_loader.num_workers,
+                pin_memory=True,
+                shuffle=False
+            )
+
+        for epoch in range(self.start_epoch, self.epoch):
+            model.train()
+            train_sampler.set_epoch(epoch)
+            if valid_sampler:
+                valid_sampler.set_epoch(epoch)
+
+            loss = self.train_func(model, train_loader, self.optimizer, epoch, device, self.recoder)
+
+            if self.scheduler:
+                self.scheduler.step()
+
+            # Validation and checkpointing
+            if (epoch + 1) % self.valid_interval == 0 and self.valid_func:
+                model.eval()
+                with torch.no_grad():
+                    local_metric = self.valid_func(model, valid_loader, epoch, device, self.recoder)
+
+                metric_tensor = torch.tensor(local_metric, device=device)
+                torch.distributed.all_reduce(metric_tensor, op=torch.distributed.ReduceOp.SUM)
+                metrics = metric_tensor.float().item() / world_size
+
+                if rank == 0:
+                    if metrics > self.best_metrics:
+                        self.best_metrics = metrics
+                        self.save_checkpoint(os.path.join(self.save_path, 'best.pt'), model)
+
+                    if (epoch + 1) % self.save_interval == 0:
+                        self.save_checkpoint(os.path.join(self.save_path, f'epoch_{epoch + 1}.pt'), model)
+
+        self.cleanup()
+        return model.module  # Return the original model (unwrapped from DDP)
+
+
+    @staticmethod
+    def save_checkpoint(save_path: str, model):
+        """
+        Save the model's state dictionary to the specified path.
+
+        This method saves only the model weights (state_dict of the underlying model
+        wrapped by DistributedDataParallel). If you need to save additional information
+        such as optimizer state, scheduler, epoch, or metrics, you can override this method:
+
+            def extended_save_checkpoint(save_path, model, optimizer, epoch):
+                checkpoint = {
+                    'model_state_dict': model.module.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'epoch': epoch
+                }
+                torch.save(checkpoint, save_path)
+
+            trainer = DDPTrainer(...)
+            trainer.save_checkpoint = staticmethod(extended_save_checkpoint)
+
+        :param save_path: The path to save the model checkpoint file.
+        :param model: The DDP-wrapped model (i.e., torch.nn.parallel.DistributedDataParallel).
+        """
+        checkpoint = {
+            'model_state_dict': model.module.state_dict()
+        }
+
+        torch.save(checkpoint, save_path)
 
 
 class BundleLoss(torch.nn.Module):
