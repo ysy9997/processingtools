@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import os
 import processingtools.functions
+import onnx
 
 if typing.TYPE_CHECKING:
     import torch
@@ -84,3 +85,37 @@ class ONNXInferenceModel:
         :return: numpy tensor
         """
         return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+
+class ONNXWeightRandomizer:
+    def __init__(self, onnx_path: str, random_ratio: float = 0.1):
+        self.model = onnx.load(onnx_path)
+        self.onnx_path = onnx_path
+        self.random_ratio = random_ratio
+
+        if not (0 <= self.random_ratio <= 1):
+            raise ValueError("random_ratio should be between 0 and 1")
+
+    def randomize(self):
+        for initializer in self.model.graph.initializer:
+            # Convert the initializer to a numpy array
+            weight_array = onnx.numpy_helper.to_array(initializer)
+
+            # Calculate the number of elements to randomize
+            num_elements = weight_array.size
+            num_randomize = int(num_elements * self.random_ratio)
+
+            # Generate random values and replace them in the weight_array directly
+            random_values = np.random.uniform(-1, 1, size=num_randomize)
+
+            # Generate random indices and apply random values directly to the flattened array
+            flat_array = weight_array.flatten()
+            random_indices = np.random.choice(flat_array.size, num_randomize, replace=False)
+            flat_array[random_indices] = random_values
+
+            # Update the initializer with the randomized weights
+            randomized_array = flat_array.reshape(weight_array.shape)
+            initializer.CopyFrom(onnx.numpy_helper.from_array(randomized_array, initializer.name))
+
+        # Save the modified ONNX model
+        onnx.save(self.model, f'{os.path.splitext(self.onnx_path)[0]}_randomize{self.random_ratio}.onnx')
