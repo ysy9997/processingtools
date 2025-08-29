@@ -3,11 +3,21 @@
 [![PyPI version](https://badge.fury.io/py/ProcessingTools.svg)](https://badge.fury.io/py/ProcessingTools)
 [![Downloads](https://pepy.tech/badge/processingtools)](https://pepy.tech/project/processingtools)
 
-# ProcessionTools
+# ProcessingTools
 
-- You can install this package using pip. 
+## Installation
+You can install this package using pip.
 
-```pip install processingtools```
+```bash
+pip install processingtools
+```
+
+The library supports Python 3.7 or higher.
+
+## Table of Contents
+- [ProgressBar](#progressbar)
+- [EnvReco](#envreco)
+- [Others](#others)
 
 ## ProgressBar
 
@@ -46,7 +56,7 @@ progress finished!(5311ms)
 - **remove_last**: If True, remove last progressbar
 
 
-## EnvRecoder
+## EnvReco
 ```
 import processingtools as pt
 import argparse
@@ -56,15 +66,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--save_path', type=str)
 args = parser.parse_args()
 
-recoder = pt.EnvReco('/save/path')
+recorder = pt.EnvReco('/save/path')
 
-args = recoder.arg2abs(args)
-recoder.record_arg(args)
-recoder.record_code()
-recoder.record_os()
-recoder.record_gpu()
-recoder.put_space()
-recoder.print('record logs')
+args = recorder.arg2abs(args)
+recorder.record_arg(args)
+recorder.record_code()
+recorder.record_os()
+recorder.record_gpu()
+recorder.put_space()
+recorder.print('record logs')
 ```
 
 Then, record information in the log file
@@ -95,8 +105,6 @@ GPU Info:
 
 <details>
 <summary>Others</summary>
-
-⚠️ This description was written almost by copilot, with some minor modifications. ⚠️ 
 
 ## Others
 
