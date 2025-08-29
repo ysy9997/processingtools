@@ -4,7 +4,7 @@ import glob
 import multiprocessing as mp
 import argparse
 import numpy as np
-import processingtools.ProgressBar
+from .ProgressBar import ProgressBar
 import time
 import warnings
 import typing
@@ -66,7 +66,7 @@ class VideoTools:
 
         create_folder(save_path, print_warning=False)
 
-        for n, i in processingtools.ProgressBar(enumerate(range(self.length)), total=self.length, finish_mark=None):
+        for n, i in ProgressBar(enumerate(range(self.length)), total=self.length, finish_mark=None):
             ret, frame = self.cap.read()
             if start <= n and ret and n % jump == 0:
                 frame = frame if size is None else cv2.resize(frame, (size[1], size[0]))
@@ -94,7 +94,7 @@ class VideoTools:
             size = [round(self.height * size), round(self.width * size)]
         out = cv2.VideoWriter(save_path, self.fourcc, self.fps, (size[1], size[0]))
 
-        for _ in processingtools.ProgressBar(range(self.length), total=self.length, finish_mark=None):
+        for _ in ProgressBar(range(self.length), total=self.length, finish_mark=None):
             _, frame = self.cap.read()
             out.write(cv2.resize(frame, (size[1], size[0])))
 
@@ -148,10 +148,10 @@ class MultiProcess:
             # Single process mode for debugging
             results = [func(*args) for args in args_list]
             if progress_args is True:
-                for result in processingtools.ProgressBar(results):
+                for result in ProgressBar(results):
                     pass
             elif progress_args:
-                for result in processingtools.ProgressBar(results, **progress_args):
+                for result in ProgressBar(results, **progress_args):
                     pass
             else:
                 for result in results:
@@ -162,10 +162,10 @@ class MultiProcess:
             with mp.Pool(processes=self.cpu_n) as pool:
                 results = [pool.apply_async(func, args) for args in args_list]
                 if progress_args is True:
-                    for result in processingtools.ProgressBar(results):
+                    for result in ProgressBar(results):
                         result.get()
                 elif progress_args:
-                    for result in processingtools.ProgressBar(results, **progress_args):
+                    for result in ProgressBar(results, **progress_args):
                         result.get()
                 else:
                     for result in results:
@@ -189,10 +189,10 @@ class MultiProcess:
             # Single process mode for debugging
             results = [func(*arg) for func, arg in zip(funcs, args)]
             if progress_args is True:
-                for result in processingtools.ProgressBar(results):
+                for result in ProgressBar(results):
                     pass
             elif progress_args:
-                for result in processingtools.ProgressBar(results, **progress_args):
+                for result in ProgressBar(results, **progress_args):
                     pass
             else:
                 for result in results:
@@ -202,10 +202,10 @@ class MultiProcess:
             with mp.Pool(processes=self.cpu_n) as pool:
                 results = [pool.apply_async(func, args) for func, args in zip(funcs, args)]
                 if progress_args is True:
-                    for result in processingtools.ProgressBar(results):
+                    for result in ProgressBar(results):
                         result.get()
                 elif progress_args:
-                    for result in processingtools.ProgressBar(results, **progress_args):
+                    for result in ProgressBar(results, **progress_args):
                         result.get()
                 else:
                     for result in results:
@@ -448,7 +448,7 @@ def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2
     h, w, _ = imread(files[0]).shape
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
 
-    for i in processingtools.ProgressBar(files):
+    for i in ProgressBar(files):
         out.write(imread(i))
 
     out.release()
@@ -732,9 +732,13 @@ def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> lis
         raise ValueError("One and only one of chunk_size or num_chunks must be provided and positive.")
 
     if chunk_size is not None:
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be a positive integer.")
         return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
     elif num_chunks is not None:
+        if num_chunks <= 0:
+            raise ValueError("num_chunks must be a positive integer.")
         part_size = len(lst) // num_chunks
         remainder = len(lst) % num_chunks
 
