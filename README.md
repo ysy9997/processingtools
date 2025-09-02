@@ -255,7 +255,7 @@ A PyTorch module for performing ensemble predictions using multiple models. This
     - **Returns**: Ensemble prediction tensor
 
 
-### s_text
+### stext
 
 Prints the given text with specified color (RGB) and style.
 
