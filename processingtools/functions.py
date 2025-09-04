@@ -277,46 +277,6 @@ class MultiProcess:
         return dill.dumps(adapted_function)
 
 
-class DeprecationWarningC(UserWarning):
-    """ Base class for warnings about deprecated features. """
-
-    def __init__(self, *args, **kwargs):  # real signature unknown
-        super().__init__(*args, **kwargs)
-
-
-def warning_format(message, category, filename, lineno, line=None):
-    """
-    Custom warning format for warnings module.
-    :param message: The warning message.
-    :param category: The category of the warning.
-    :param filename: The name of the file in which the warning was raised.
-    :param lineno: The line number where the warning was raised.
-    :param line: The line of code that raised the warning.
-    :return: A string containing a warning message.
-    """
-
-    return f'{category.__name__}: {message}\n'
-
-
-def custom_warning_format(func):
-    """
-    Decorator for applying a custom warning format to a function.
-    :param func: The function to apply the custom warning format to.
-    :return: The decorated function.
-    """
-
-    def wrapper(*args, **kwargs):
-        original_format = warnings.formatwarning
-        warnings.formatwarning = warning_format
-        try:
-            result = func(*args, **kwargs)
-        finally:
-            warnings.formatwarning = original_format
-        return result
-    return wrapper
-
-
-@custom_warning_format
 def create_folder(directory, print_warning: bool = True, warning=None):
     """
     create folder when folder is not exist
@@ -327,8 +287,7 @@ def create_folder(directory, print_warning: bool = True, warning=None):
     """
 
     if warning is not None:
-        warnings.warn(f'argument warning will be deprecated in the next version. Use the print_warning instead.', DeprecationWarning)
-        warnings.warn(f'argument warning will be deprecated in the next version. Use the print_warning instead.', DeprecationWarningC)
+        warnings.warn(f'argument warning will be deprecated in the next version. Use the print_warning instead.', DeprecationWarning, stacklevel=2)
         print_warning = warning
 
     directory = os.path.abspath(directory)
@@ -341,7 +300,7 @@ def create_folder(directory, print_warning: bool = True, warning=None):
             return True
         else:
             if print_warning:
-                warnings.warn(f'{directory} is already exist.')
+                warnings.warn(f'{directory} is already exist.', stacklevel=2)
             return False
     except OSError:
         raise OSError(f'Error: Cannot create directory. ({directory})')
@@ -379,80 +338,6 @@ def read_images(dir_path: str, img_format: str = None):
 
     else:
         return [imread(_) for _ in sorted(glob.glob(f'{dir_path}/*.{img_format}'))]
-
-
-@custom_warning_format
-def multi_func(func, args: tuple, cpu_n: int = mp.cpu_count()) -> True:
-    """
-    Run the function as multiprocess
-    :param func: the function for running multiprocess
-    :param args: arguments for function
-    :param cpu_n: the number of cpus number that you want use (default: the number of the all cpus)
-    :return: True
-    """
-
-    warnings.warn(f'{multi_func.__name__} will be deprecated in the next version. Use the class MultiProcess instead.', DeprecationWarning)
-    warnings.warn(f'{multi_func.__name__} will be deprecated in the next version. Use the class MultiProcess instead.', DeprecationWarningC)
-
-    i = 0
-    j = 0
-
-    if cpu_n < len(args):
-        for i in range(len(args) // cpu_n):
-            pro = list()
-            for j in range(cpu_n):
-                pro.append(mp.Process(target=func, args=args[i * cpu_n + j]))
-            for mul in pro: mul.start()
-            for mul in pro: mul.join()
-
-        pro = list()
-        for left in range(cpu_n * i + j + 1, len(args)):
-            pro.append(mp.Process(target=func, args=args[left]))
-        for mul in pro: mul.start()
-        for mul in pro: mul.join()
-
-    else:
-        pro = list()
-        for left in range(0, len(args)):
-            pro.append(mp.Process(target=func, args=args[left]))
-        for mul in pro: mul.start()
-        for mul in pro: mul.join()
-
-    return True
-
-
-@custom_warning_format
-def png2video(images_path: str, save_path: str, fps: int = 60, fourcc: int = cv2.VideoWriter_fourcc(*'DIVX')):
-    """
-    make avi file using images in path
-    :param images_path: directory path for images
-    :param save_path: directory path for video
-    :param fps:  frame per second (default: 60)
-    :param fourcc: video fourcc (default: cv2.VideoWriter_fourcc(*'DIVX'))
-    :return: True
-    """
-
-    warnings.warn(f'{png2video.__name__} will be deprecated in the next version. Use the class VideoTools instead.', DeprecationWarning)
-    warnings.warn(f'{png2video.__name__} will be deprecated in the next version. Use the class VideoTools instead.', DeprecationWarningC)
-
-    # when run in window, should replace backslash
-    images_path = images_path.replace('\\', '/')
-    save_path = save_path.replace('\\', '/')
-
-    files = glob.glob(images_path + '/*.png')
-    files = sorted(files)
-
-    # when run in window, glob return backslash so easteregg have to do
-    for n, i in enumerate(files): files[n] = i.replace('\\', '/')
-
-    h, w, _ = imread(files[0]).shape
-    out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
-
-    for i in ProgressBar(files):
-        out.write(imread(i))
-
-    out.release()
-    return True
 
 
 def str2bool(v):
@@ -581,7 +466,6 @@ def zero_padding(max_num, present_num):
     return f'{present_num:{format_string}}'
 
 
-@custom_warning_format
 def s_text(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
     """
     prints the given text with specified color and style.
@@ -593,8 +477,7 @@ def s_text(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
     :return: str
     """
 
-    warnings.warn(f'argument warning will be deprecated in the next version. Use the stext instead.', DeprecationWarning)
-    warnings.warn(f'argument warning will be deprecated in the next version. Use the stext instead.', DeprecationWarningC)
+    warnings.warn(f'{s_text.__name__} will be deprecated in the next version. Use the function stext instead.', DeprecationWarning, stacklevel=2)
 
     return stext(text, f_rgb, b_rgb, styles)
 
@@ -734,7 +617,6 @@ def save_images(images_path: list, images: typing.List[np.ndarray]) -> None:
     multi_processor.duplicate_func(imwrite, args, progress_args={'finish_mark': 'image write done.'})
 
 
-@custom_warning_format
 def imwrite(file_path: str, image: np.ndarray) -> bool:
     """
     Writes an image to the specified file path, including paths with Hangul characters.
@@ -749,13 +631,13 @@ def imwrite(file_path: str, image: np.ndarray) -> bool:
         result, buffer = cv2.imencode(os.path.splitext(file_path)[1], image)
 
         if not result:
-            warnings.warn(f"Error encoding the image for file '{file_path}'")
+            warnings.warn(f"Error encoding the image for file '{file_path}'", stacklevel=2)
             return False
         buffer.tofile(file_path)
         return True
 
     except Exception as e:
-        warnings.warn(f"Error saving file '{file_path}': {e}")
+        warnings.warn(f"Error saving file '{file_path}': {e}", stacklevel=2)
         return False
 
 
@@ -818,7 +700,6 @@ def chunk_list(lst: list, chunk_size: int = None, num_chunks: int = None) -> lis
     raise RuntimeError(f'Internal logic error in {chunk_list.__name__}: Unexpected branch reached.')
 
 
-@custom_warning_format
 def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, exist_ok: bool=False) -> typing.TextIO:
     """
     A safer version of the built-in open function.
@@ -826,8 +707,7 @@ def s_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=Non
     :param exist_ok: If False and mode is 'w', raises FileExistsError if the file already exists.
     """
 
-    warnings.warn(f'argument warning will be deprecated in the next version. Use the sopen instead.', DeprecationWarning)
-    warnings.warn(f'argument warning will be deprecated in the next version. Use the sopen instead.', DeprecationWarningC)
+    warnings.warn(f'{s_open.__name__} will be deprecated in the next version. Use the sopen instead.', DeprecationWarning, stacklevel=2)
 
     return sopen(file, mode, buffering, encoding, errors, newline, closefd, exist_ok)
 
