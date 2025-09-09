@@ -486,84 +486,62 @@ def stext(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
     """
     prints the given text with specified color and style.
     :param text: the text to be printed
-    :param f_rgb: the RGB color code for the text color or color name string
-    :param b_rgb: the RGB color code for the background color or color name string
-    :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
-        (must be a tuple, multiple styles can be applied)
+    :param f_rgb: the RGB tuple or ANSI color name (str)
+    :param b_rgb: the RGB tuple or ANSI color name (str)
+    :param styles: styles to apply ('bold','tilt','underscore','cancel')
     :return: str
     """
 
-    # define style codes
+    # style codes
     style_codes = {
         'bold': '\033[1m',
+        'dim': '\033[2m',
         'tilt': '\033[3m',
         'underscore': '\033[4m',
+        'double_underscore': '\033[21m',
         'cancel': '\033[9m',
-        'flicker': '\033[5m'
+        'inverse': '\033[7m',
+        'hidden': '\033[8m',
     }
 
-    # define color name to RGB mapping
-    color_map = {
-        'black': (0, 0, 0),
-        'red': (255, 0, 0),
-        'green': (0, 255, 0),
-        'yellow': (255, 255, 0),
-        'blue': (0, 0, 255),
-        'magenta': (255, 0, 255),
-        'cyan': (0, 255, 255),
-        'white': (255, 255, 255),
-        'gray': (128, 128, 128),
-        'grey': (128, 128, 128),
-        'orange': (255, 165, 0),
-        'purple': (128, 0, 128),
-        'pink': (255, 192, 203),
-        'brown': (165, 42, 42),
-        'lime': (0, 255, 0),
-        'navy': (0, 0, 128),
-        'gold': (255, 215, 0),
-        'silver': (192, 192, 192),
-        'maroon': (128, 0, 0),
-        'olive': (128, 128, 0),
-        'teal': (0, 128, 128),
-        'aqua': (0, 255, 255),
-        'fuchsia': (255, 0, 255),
-        'sky': (135, 206, 235),
-        'skyblue': (135, 206, 235),
-        'violet': (238, 130, 238),
-        'indigo': (75, 0, 130),
-        'beige': (245, 245, 220),
-        'coral': (255, 127, 80),
+    # ANSI standard color codes (foreground / background)
+    ansi_colors = {
+        'black': 30, 'red': 31, 'green': 32, 'yellow': 33,
+        'blue': 34, 'magenta': 35, 'cyan': 36, 'white': 37,
+        'default': 39, 'gray': 90, 'grey': 90,
+        'bright_red': 91, 'bright_green': 92, 'bright_yellow': 93,
+        'bright_blue': 94, 'bright_magenta': 95, 'bright_cyan': 96, 'bright_white': 97,
     }
 
-    # apply styles to the text
+    # apply styles
     for style in styles:
         if style not in style_codes:
-            raise ValueError(f'Unknown style name for styles: {style}. \nValid options are: {list(style_codes.keys())}')
-        text = f'{style_codes.get(style, "")}{text}'
+            raise ValueError(f"Unknown style name: {style}. Valid: {list(style_codes.keys())}")
+        text = style_codes[style] + text
 
-    # set text color
+    # foreground color
     if f_rgb:
         if isinstance(f_rgb, str):
-            rgb = color_map.get(f_rgb.lower())
-            if rgb is None:
-                raise ValueError(f'Unknown color name for f_rgb: {f_rgb}. \nValid options are: {list(color_map.keys())}')
-            foreground_rgb = rgb
-        else:
-            foreground_rgb = [max(0, min(255, int(c))) for c in f_rgb[:3]]
-        text = f'\033[38;2;{foreground_rgb[0]};{foreground_rgb[1]};{foreground_rgb[2]}m{text}'
+            code = ansi_colors.get(f_rgb.lower())
+            if code is None:
+                raise ValueError(f"Unknown color name for f_rgb: {f_rgb}. Valid: {list(ansi_colors.keys())}")
+            text = f"\033[{code}m{text}"
+        else:  # assume tuple (R,G,B)
+            r, g, b = [max(0, min(255, int(c))) for c in f_rgb[:3]]
+            text = f"\033[38;2;{r};{g};{b}m{text}"
 
-    # set background color
+    # background color
     if b_rgb:
         if isinstance(b_rgb, str):
-            rgb = color_map.get(b_rgb.lower())
-            if rgb is None:
-                raise ValueError(f'Unknown color name for b_rgb: {b_rgb}. \nValid options are: {list(color_map.keys())}')
-            background_rgb = rgb
+            code = ansi_colors.get(b_rgb.lower())
+            if code is None:
+                raise ValueError(f"Unknown color name for b_rgb: {b_rgb}. Valid: {list(ansi_colors.keys())}")
+            text = f"\033[{code+10}m{text}"  # background code = fg+10
         else:
-            background_rgb = [max(0, min(255, int(c))) for c in b_rgb[:3]]
-        text = f'\033[48;2;{background_rgb[0]};{background_rgb[1]};{background_rgb[2]}m{text}'
+            r, g, b = [max(0, min(255, int(c))) for c in b_rgb[:3]]
+            text = f"\033[48;2;{r};{g};{b}m{text}"
 
-    return f'{text}\033[0m'
+    return f"{text}\033[0m"
 
 
 def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
