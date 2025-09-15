@@ -1,23 +1,32 @@
-import onnxruntime
+import os
 import typing
+import warnings
+
 import cv2
 import numpy as np
-import os
-import processingtools.functions
 import onnx
+import onnxruntime
+
+import processingtools.functions
 
 if typing.TYPE_CHECKING:
     import torch
 
+class ONNXAutoInputModel:
+    """ONNXRuntime model with automatic image preprocessing."""
 
-class ONNXInferenceModel:
-    def __init__(self, onnx_model_path: str, size: typing.Union[tuple, list, None] = None,
-                 mean: typing.Union[float, typing.Tuple[float, float, float], np.array] = np.array([0.0, 0.0, 0.0]),
-                 std: typing.Union[float, typing.Tuple[float, float, float], np.array] = np.array([1.0, 1.0, 1.0])):
+    def __init__(
+        self,
+        onnx_model_path: str,
+        size: typing.Union[tuple, list, None] = None,
+        mean: typing.Union[float, typing.Tuple[float, float, float], np.array] = np.array([0.0, 0.0, 0.0]),
+        std: typing.Union[float, typing.Tuple[float, float, float], np.array] = np.array([1.0, 1.0, 1.0]),
+    ):
         """
-        initialize
-        :param onnx_model_path: onnx file path
-        :param size: size to which images will be resized
+        Initialize the model.
+
+        :param onnx_model_path: ONNX file path
+        :param size: resize dimensions ``(height, width)``
         :param mean: mean for normalization
         :param std: standard deviation for normalization
         """
@@ -70,7 +79,7 @@ class ONNXInferenceModel:
         try:
             image = processingtools.functions.imread(image_path)
             if self.size is not None:
-                image = cv2.resize(image, self.size)
+                image = cv2.resize(image, tuple(self.size[::-1]))
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
             image = np.transpose((image - self.mean) / self.std, (2, 0, 1))
             return np.expand_dims(image, axis=0).astype('float32')
@@ -85,6 +94,24 @@ class ONNXInferenceModel:
         :return: numpy tensor
         """
         return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+
+class ONNXInferenceModel(ONNXAutoInputModel):
+    """Deprecated name for :class:`ONNXAutoInputModel`."""
+
+    def __init__(
+        self,
+        onnx_model_path: str,
+        size: typing.Union[tuple, list, None] = None,
+        mean: typing.Union[float, typing.Tuple[float, float, float], np.array] = np.array([0.0, 0.0, 0.0]),
+        std: typing.Union[float, typing.Tuple[float, float, float], np.array] = np.array([1.0, 1.0, 1.0]),
+    ):
+        warnings.warn(
+            'ONNXInferenceModel is deprecated. Use ONNXAutoInputModel instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(onnx_model_path, size=size, mean=mean, std=std)
 
 
 class ONNXWeightRandomizer:

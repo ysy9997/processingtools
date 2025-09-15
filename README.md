@@ -236,6 +236,12 @@ It supports custom transformers and normalization parameters.
         - **device**: Device to move the model to (e.g., 'cpu', 'cuda')
 
 
+
+### ONNXAutoInputModel
+An ONNXRuntime-based helper that automatically preprocesses images and runs ONNX models. The ``size`` argument uses ``(height, width)`` ordering, matching ``AutoInputModel``.
+
+> ``ONNXInferenceModel`` remains as a deprecated alias and will emit a ``DeprecationWarning`` when used.
+
 ### EnsembleModel
 A PyTorch module for performing ensemble predictions using multiple models. This class provides functionality to ensemble model predictions using different methods such as mean and weighted average.
 
