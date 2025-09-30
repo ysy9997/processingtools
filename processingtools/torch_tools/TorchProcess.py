@@ -395,10 +395,17 @@ class AutoInputModel(torch.nn.Module):
 
         self.get_device(logging)
 
+        if inputs is None:
+            raise ValueError('Inputs cannot be empty.')
+
         if isinstance(inputs, list):
+            if len(inputs) == 0:
+                raise ValueError('Inputs cannot be an empty list.')
             return self._process_batch(inputs, batch_size, num_workers, logging)
 
         if isinstance(inputs, str):
+            if inputs == '':
+                raise ValueError('Input path cannot be an empty string.')
             return self.model(self.image_read(inputs))
 
         raise TypeError('Inputs must be a string or a list of strings')
