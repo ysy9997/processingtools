@@ -77,7 +77,7 @@ class ProgressBar:
             self.print_info(bar, '', '100.0', '0s', None, end=True)
 
             if self.finish_mark:
-                print(f'\n\033[5m{self.finish_mark}\033[0m ({round(time.time() * 1000 - self.start)}ms)\n')
+                print(f'\n{self.finish_mark}\033[0m ({round(time.time() * 1000 - self.start)}ms)\n')
 
             raise StopIteration
         else:

@@ -180,7 +180,7 @@ class DDPTrainer:
                 "train_loader has shuffle=True but no sampler is set. "
                 "This may cause issues with DistributedSampler. "
                 "Consider using DistributedSampler with shuffle=False."
-            )
+            , stacklevel=2)
 
     def train(self, rank: int, world_size: int):
         self.setup(rank, world_size)
@@ -323,7 +323,6 @@ class AutoInputModel(torch.nn.Module):
     It supports custom transformers and normalization parameters.
     """
 
-    @processingtools.functions.custom_warning_format
     def __init__(self, model, size: typing.Union[tuple, list, None] = None, mean: typing.Union[float, list, torch.Tensor, None] = None, std: typing.Union[float, list, torch.Tensor, None] = None, transformer=None):
         """
         initialize the AutoInputModel
@@ -342,7 +341,7 @@ class AutoInputModel(torch.nn.Module):
         self.model = model
 
         if transformer is not None and (mean is not None or std is not None):
-            warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).')
+            warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).', stacklevel=2)
 
         if transformer is not None:
             self.transform = transformer
@@ -378,9 +377,8 @@ class AutoInputModel(torch.nn.Module):
 
         self.device = next(self.model.parameters()).device
         if logging:
-            print(f'run on {processingtools.functions.s_text(f"{self.device}", styles=("bold",))}')
+            print(f'run on {processingtools.functions.stext(f"{self.device}", styles=("bold",))}')
 
-    @processingtools.functions.custom_warning_format
     @torch.no_grad()
     def forward(self, inputs: typing.Union[str, list], batch_size: int = 1, num_workers: int = 0, logging: bool = True) -> typing.Union[torch.Tensor, dict]:
         """
@@ -393,7 +391,7 @@ class AutoInputModel(torch.nn.Module):
         """
 
         if self.model.training:
-            warnings.warn('Model is in training mode! (If you want to change to eval mode, use model.eval())')
+            warnings.warn('Model is in training mode! (If you want to change to eval mode, use model.eval())', stacklevel=2)
 
         self.get_device(logging)
 
@@ -484,7 +482,7 @@ class AutoInputDataset(torch.utils.data.Dataset):
         """
 
         if transformer is not None and (mean is not None or std is not None):
-            warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).')
+            warnings.warn('NormalizeModel uses transformer for normalizing not (mean, std).', stacklevel=2)
 
         if transformer is not None:
             self.transform = transformer
