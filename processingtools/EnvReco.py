@@ -57,10 +57,11 @@ class EnvReco:
         print(f'Record in the \"{self.save_path}\".')
         self.logs.close()
 
-    def record_code(self, folder_name: str = 'snapshot') -> True:
+    def record_code(self, folder_name: str = 'snapshot', ignore: list = None) -> bool:
         """
         record project code
         :param folder_name:
+        :param ignore: if you insert folder name, it will ignore the folder when record code
         :return: True
         """
 
@@ -69,7 +70,7 @@ class EnvReco:
                 raise OSError('[record_code] will save the current folder. '
                               'Thus, the save path must not include the current path.')
 
-            shutil.copytree(f'{self.project_root_path}', f'{self.save_path}/{folder_name}/')
+            shutil.copytree(f'{self.project_root_path}', f'{self.save_path}/{folder_name}/', ignore=shutil.ignore_patterns(*ignore) if ignore is not None else None)
 
         return True
 
