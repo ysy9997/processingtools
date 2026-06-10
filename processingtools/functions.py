@@ -544,7 +544,7 @@ def stext(text, f_rgb=None, b_rgb=None, styles: tuple = ()) -> str:
     return f"{text}\033[0m"
 
 
-def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', file=None) -> None:
+def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), **kwargs) -> None:
     """
     prints the given text with specified color and style.
     :param text: the text to be printed
@@ -552,13 +552,11 @@ def sprint(text, f_rgb=None, b_rgb=None, styles: tuple = (), sep=' ', end='\n', 
     :param b_rgb: the RGB color code for the background color
     :param styles: the styles to be applied to the text. Options are 'bold', 'tilt', 'underscore', and 'cancel'
         (must be a tuple, multiple styles can be applied)
-    :param sep: the separator to be used in the print function
-    :param end: the end character to be used in the print function
-    :param file: the file where the output will be written
+    :param kwargs: additional keyword arguments to pass to print function (sep, end, file, etc.)
     :return: None
     """
 
-    print(f'{stext(text, f_rgb, b_rgb, styles)}', sep=sep, end=end, file=file)
+    print(stext(text, f_rgb, b_rgb, styles), **kwargs)
 
 
 class TextReader:
